@@ -27,7 +27,7 @@
         .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
         .tab-active { background-color: #D1523E; color: #FFFFFF; }
         .tab-inactive { background-color: #FFFFFF; color: #3D405B; border: 1px solid #E0E0E0; }
-        .code-block { background-color: #2D3748; color: #EDF2F7; border-radius: 0.5rem; padding: 1rem; position: relative; }
+        .code-block { background-color: #2D3748; color: #EDF2F7; border-radius: 0.5rem; padding: 1rem; position: relative; font-family: monospace; }
         .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #4A5568; color: #EDF2F7; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; }
         .copy-btn:hover { background-color: #718096; }
         .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
@@ -90,9 +90,13 @@
                         goal: 'Learn the absolute basics: making the robot move, light up, and make sounds. We\'ll also learn about variables to store information.',
                         concepts: ['Motors', 'Lights', 'Sounds', 'Variables'],
                         exercises: [
-                            { title: 'First Moves (The Basics)', code: `from spike import PrimeHub, Motor\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor = Motor('A')\n\nhub.light_matrix.show_image('HAPPY')\nwait_for_seconds(1)\n\nprint("Moving forward!")\nmotor.run_for_rotations(1)\nwait_for_seconds(1)\n\nprint("Moving backward!")\nmotor.run_for_rotations(-1)\n\nhub.light_matrix.off()` },
-                            { title: 'Wake-Up Routine with Variables', code: `from spike import PrimeHub, MotorPair\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\nwakeup_sound = 60\nready_sound = 72\ncircle_distance = 15\n\nhub.speaker.beep(note=wakeup_sound)\nhub.light_matrix.show_image('ASLEEP')\nwait_for_seconds(1)\n\nhub.light_matrix.show_image('HAPPY')\nhub.speaker.beep(note=ready_sound)\n\nmotor_pair.move(circle_distance, 'cm', steering=100)` },
-                            { title: 'Custom Light Show', code: `from spike import PrimeHub\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\n\nhub.light_matrix.set_pixel(0, 0, 100)\nhub.light_matrix.set_pixel(4, 0, 100)\nhub.light_matrix.set_pixel(1, 1, 100)\nhub.light_matrix.set_pixel(3, 1, 100)\nhub.light_matrix.set_pixel(2, 2, 100)\nhub.light_matrix.set_pixel(1, 3, 100)\nhub.light_matrix.set_pixel(3, 3, 100)\nhub.light_matrix.set_pixel(0, 4, 100)\nhub.light_matrix.set_pixel(4, 4, 100)\n\nwait_for_seconds(3)\nhub.light_matrix.off()` },
+                            { title: 'First Moves (The Basics)', code: `# Import brings in the tools we need.\nfrom spike import PrimeHub, Motor\nfrom spike.control import wait_for_seconds\n\n# Initialize the Hub (the brain).\nhub = PrimeHub()\n# Initialize the motor on Port A.\nmotor = Motor('A')\n\n# Show a built-in image on the 5x5 light matrix.\nhub.light_matrix.show_image('HAPPY')\n# Pause the program for 1 second.\nwait_for_seconds(1)\n\n# Tell the console what we are doing.\nprint("Moving forward!")\n# Run the motor forward for 1 full rotation.\nmotor.run_for_rotations(1)\nwait_for_seconds(1)\n\nprint("Moving backward!")\n# A negative number makes the motor run in reverse.\nmotor.run_for_rotations(-1)\n\n# Turn all the lights off.\nhub.light_matrix.off()` },
+                            { title: 'Wake-Up Routine with Variables', code: `# MotorPair lets us control two motors at once for driving.\nfrom spike import PrimeHub, MotorPair\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\n# Initialize a pair for motors in Port A and B.\nmotor_pair = MotorPair('A', 'B')\n\n# --- Variables --- \n# Variables store information with a name.\nwakeup_sound = 60 # MIDI note for the sound (C4).\nready_sound = 72  # MIDI note for a higher sound (C5).\ncircle_distance = 15 # The distance in cm.\n\n# Beep with the note stored in our variable.\nhub.speaker.beep(note=wakeup_sound)\nhub.light_matrix.show_image('ASLEEP')\nwait_for_seconds(1)\n\nhub.light_matrix.show_image('HAPPY')\nhub.speaker.beep(note=ready_sound)\n\n# Move in a circle using our distance variable.\n# Steering = 100 makes a sharp right turn.\nmotor_pair.move(circle_distance, 'cm', steering=100)` },
+                            { title: 'Custom Light Show', code: `# We only need the Hub for this exercise.\nfrom spike import PrimeHub\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\n\n# set_pixel lights up one LED at (x, y) with a brightness (0-100).\n# X is horizontal (0-4), Y is vertical (0-4).\n\n# Let's draw a simple 'X'\nhub.light_matrix.set_pixel(0, 0, brightness=100)\nhub.light_matrix.set_pixel(4, 0, brightness=100)\nhub.light_matrix.set_pixel(1, 1, brightness=100)\nhub.light_matrix.set_pixel(3, 1, brightness=100)\nhub.light_matrix.set_pixel(2, 2, brightness=100)\nhub.light_matrix.set_pixel(1, 3, brightness=100)\nhub.light_matrix.set_pixel(3, 3, brightness=100)\nhub.light_matrix.set_pixel(0, 4, brightness=100)\nhub.light_matrix.set_pixel(4, 4, brightness=100)\n\nwait_for_seconds(3)\nhub.light_matrix.off()` },
+                        ],
+                        explore: [
+                            { func: 'hub.speaker.start_beep()', desc: 'Starts a continuous beep that does not stop the program.', example: `hub.speaker.start_beep(note=72)\nmotor_pair.move(2, 'rotations')\nhub.speaker.stop()`},
+                            { func: 'motor_pair.move_tank()', desc: 'Controls the speed of each motor individually for custom turns.', example: `# This makes the robot curve to the right.\nmotor_pair.move_tank(1, 'rotations', left_speed=75, right_speed=25)`}
                         ]
                     },
                     // Class 2
@@ -102,9 +106,13 @@
                         goal: 'Learn how to make precise turns and organize our code into reusable blocks called functions. We\'ll also meet the Gyro Sensor!',
                         concepts: ['Functions', 'Gyro Sensor'],
                         exercises: [
-                            { title: 'The Perfect 90-Degree Turn (Gyro)', code: `from spike import PrimeHub, MotorPair\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\nhub.motion_sensor.reset_yaw_angle()\n\nprint("Turning right...")\nmotor_pair.start(steering=50)\n\nwhile hub.motion_sensor.get_yaw_angle() < 90:\n    pass\n\nmotor_pair.stop()\nprint("Turn complete!")` },
-                            { title: 'Creating Reusable Functions', code: `from spike import PrimeHub, MotorPair\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\ndef move_straight(distance_cm):\n    print("Moving straight for", distance_cm, "cm")\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(distance_cm, 'cm', steering=0)\n\ndef turn_right_90():\n    print("Turning right 90 degrees")\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.start(steering=100)\n    while hub.motion_sensor.get_yaw_angle() < 88:\n        pass\n    motor_pair.stop()\n\nfor i in range(4):\n    move_straight(20)\n    turn_right_90()` },
-                            { title: 'Driving Straight with Gyro Correction', code: `from spike import PrimeHub, MotorPair\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\nprint("Moving without gyro...")\nmotor_pair.move(50, 'cm')\nwait_for_seconds(2)\n\nprint("Moving WITH gyro...")\nhub.motion_sensor.reset_yaw_angle()\nmotor_pair.move(50, 'cm', steering=0)` },
+                            { title: 'The Perfect 90-Degree Turn (Gyro)', code: `from spike import PrimeHub, MotorPair\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\n# reset_yaw_angle sets the robot's current direction to 0.\n# This is CRITICAL for accurate turns.\nhub.motion_sensor.reset_yaw_angle()\n\nprint("Turning right...")\n# Start turning at a moderate speed.\nmotor_pair.start(steering=50)\n\n# A 'while' loop repeats as long as the condition is true.\n# We wait here until the angle is >= 90.\nwhile hub.motion_sensor.get_yaw_angle() < 90:\n    pass # 'pass' means do nothing, just wait.\n\n# As soon as the loop finishes, stop the motors.\nmotor_pair.stop()\nprint("Turn complete!")` },
+                            { title: 'Creating Reusable Functions', code: `from spike import PrimeHub, MotorPair\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\n# 'def' defines a function. This code can be reused.\ndef move_straight(distance_cm):\n    print("Moving straight for", distance_cm, "cm")\n    hub.motion_sensor.reset_yaw_angle()\n    # steering=0 tells the robot to use the gyro to resist turning.\n    motor_pair.move(distance_cm, 'cm', steering=0)\n\ndef turn_right_90():\n    print("Turning right 90 degrees")\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.start(steering=100)\n    # Using 88 degrees can compensate for motor coasting.\n    while hub.motion_sensor.get_yaw_angle() < 88:\n        pass\n    motor_pair.stop()\n\n# A 'for' loop repeats the code inside a set number of times.\nfor i in range(4):\n    # Call our functions to draw a square.\n    move_straight(20)\n    turn_right_90()` },
+                            { title: 'Driving Straight with Gyro Correction', code: `from spike import PrimeHub, MotorPair\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\n# This move relies only on the motors running at the same speed.\nprint("Moving without gyro...")\nmotor_pair.move(50, 'cm')\nwait_for_seconds(2)\n\n# This move uses the gyro to actively correct any deviation.\nprint("Moving WITH gyro...")\nhub.motion_sensor.reset_yaw_angle()\nmotor_pair.move(50, 'cm', steering=0)` },
+                        ],
+                        explore: [
+                            { func: 'hub.motion_sensor.get_pitch_angle()', desc: 'Gets the up/down tilt of the Hub. Useful for detecting ramps or if the robot has fallen over.', example: `pitch = hub.motion_sensor.get_pitch_angle()\nprint("Current tilt:", pitch)`},
+                            { func: 'motor.get_position()', desc: 'Gets the motor\'s rotation in degrees relative to when the program started.', example: `position = motor.get_position()\nprint("Motor has turned", position, "degrees.")`}
                         ]
                     },
                     // Class 3
@@ -114,8 +122,12 @@
                         goal: 'Use the Color Sensor to follow a black line on a white surface using a concept called Proportional Control.',
                         concepts: ['Color Sensor', 'Proportional Control'],
                         exercises: [
-                            { title: 'Finding the Edge', code: `from spike import PrimeHub, ColorSensor\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\ncolor_sensor = ColorSensor('C')\n\nhub.light_matrix.write('W')\nwait_for_seconds(3)\nwhite_light = color_sensor.get_reflected_light()\nprint("White light value:", white_light)\nhub.speaker.beep()\n\nhub.light_matrix.write('B')\nwait_for_seconds(3)\nblack_light = color_sensor.get_reflected_light()\nprint("Black light value:", black_light)\nhub.speaker.beep()\n\ntarget_light = (white_light + black_light) / 2\nprint("Calculated Target Light:", target_light)` },
-                            { title: 'The Smooth Proportional Line Follower', code: `from spike import MotorPair, ColorSensor\n\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\n\nTARGET_LIGHT = 50\nSPEED = 30\nGAIN = 1.5\n\nwhile True:\n    error = color_sensor.get_reflected_light() - TARGET_LIGHT\n    steering = error * GAIN\n    motor_pair.start(steering=steering, speed=SPEED)` },
+                            { title: 'Finding the Edge', code: `from spike import PrimeHub, ColorSensor\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\ncolor_sensor = ColorSensor('C')\n\n# get_reflected_light() returns a value from 0 (dark) to 100 (bright).\nhub.light_matrix.write('W')\nwait_for_seconds(3)\nwhite_light = color_sensor.get_reflected_light()\nprint("White light value:", white_light)\nhub.speaker.beep()\n\nhub.light_matrix.write('B')\nwait_for_seconds(3)\nblack_light = color_sensor.get_reflected_light()\nprint("Black light value:", black_light)\nhub.speaker.beep()\n\n# The ideal target for the edge of a line is halfway between the two values.\ntarget_light = (white_light + black_light) / 2\nprint("Calculated Target Light:", target_light)` },
+                            { title: 'The Smooth Proportional Line Follower', code: `from spike import MotorPair, ColorSensor\n\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\n\n# Constants are variables that don't change. We use ALL_CAPS.\nTARGET_LIGHT = 50\nSPEED = 30\n# GAIN is a multiplier. Higher gain = sharper turns.\nGAIN = 1.5\n\nwhile True:\n    # 1. Calculate the 'error' - how far are we from the target?\n    # Positive error = too bright (on white), Negative = too dark (on black)\n    error = color_sensor.get_reflected_light() - TARGET_LIGHT\n\n    # 2. Calculate the steering correction by multiplying error by gain.\n    steering = error * GAIN\n\n    # 3. Apply the correction. The robot will automatically turn.\n    motor_pair.start(steering=steering, speed=SPEED)` },
+                        ],
+                        explore: [
+                            { func: 'color_sensor.get_rgb_intensity()', desc: 'Gets the intensity of Red, Green, and Blue light separately.', example: `r, g, b, intensity = color_sensor.get_rgb_intensity()\nprint("Red:", r)`},
+                            { func: 'color_sensor.wait_until_color()', desc: 'Pauses the program until a specific color is detected.', example: `print("Driving until I see blue...")\nmotor_pair.start()\ncolor_sensor.wait_until_color('blue')\nmotor_pair.stop()`}
                         ]
                     },
                     // Class 4
@@ -125,8 +137,12 @@
                         goal: 'Use the Force and Distance sensors to interact with the world. We\'ll also use the Gyro to navigate a simple maze.',
                         concepts: ['Force Sensor', 'Distance Sensor', 'Maze Logic'],
                         exercises: [
-                            { title: 'Wall Detector', code: `from spike import PrimeHub, MotorPair, DistanceSensor\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\nmotor_pair.start(speed=30)\n\ndistance_sensor.wait_for_distance_closer_than(10, 'cm')\n\nmotor_pair.stop()\nhub.light_matrix.show_image('HAPPY')\nhub.speaker.beep()` },
-                            { title: 'Simple Maze Solver', code: `from spike import PrimeHub, MotorPair, DistanceSensor\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\ndef turn_right_90():\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(88, 'degrees', steering=100)\n\ndef turn_left_90():\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(88, 'degrees', steering=-100)\n\nwhile True:\n    motor_pair.move(10, 'cm', steering=0)\n    turn_right_90()\n    distance = distance_sensor.get_distance_cm()\n    if distance is None or distance > 20:\n        continue\n    else:\n        turn_left_90()\n        distance = distance_sensor.get_distance_cm()\n        if distance is None or distance > 20:\n            continue\n        else:\n            turn_left_90()` },
+                            { title: 'Wall Detector', code: `from spike import PrimeHub, MotorPair, DistanceSensor\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\nmotor_pair.start(speed=30)\n\n# This function pauses the program until the condition is met.\n# It's great for simple approach tasks.\ndistance_sensor.wait_for_distance_closer_than(10, 'cm')\n\nmotor_pair.stop()\nhub.light_matrix.show_image('HAPPY')\nhub.speaker.beep()` },
+                            { title: 'Simple Maze Solver', code: `from spike import PrimeHub, MotorPair, DistanceSensor\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\ndef turn_right_90():\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(88, 'degrees', steering=100)\n\ndef turn_left_90():\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(88, 'degrees', steering=-100)\n\nwhile True:\n    # Always move forward one step.\n    motor_pair.move(10, 'cm', steering=0)\n    \n    # Turn right and check for a wall.\n    turn_right_90()\n    distance = distance_sensor.get_distance_cm()\n    \n    # If distance is None (too far) or > 20cm, the path is open.\n    if distance is None or distance > 20:\n        continue # Go to start of loop and move forward.\n    else:\n        # Path is blocked, turn back left.\n        turn_left_90()\n        # Check if path is open straight ahead.\n        distance = distance_sensor.get_distance_cm()\n        if distance is None or distance > 20:\n            continue # Go to start of loop.\n        else:\n            # Only option is to turn left.\n            turn_left_90()` },
+                        ],
+                        explore: [
+                            { func: 'force_sensor.get_force_newton()', desc: 'Measures the force of a press in Newtons.', example: `force_N = force_sensor.get_force_newton()\nif force_N > 5:\n    print("Ouch!")`},
+                            { func: 'distance_sensor.get_distance_inches()', desc: 'Gets the distance in inches instead of centimeters.', example: `dist_in = distance_sensor.get_distance_inches()\nif dist_in is not None and dist_in < 4:\n    motor_pair.stop()`}
                         ]
                     },
                     // Class 5
@@ -136,8 +152,12 @@
                         goal: 'Learn how to make the robot do multiple things at once using asyncio and runloop. This is the key to making a responsive robot.',
                         concepts: ['Async/Await', 'Concurrency'],
                         exercises: [
-                            { title: 'Drive and Scan', code: `from spike import MotorPair, DistanceSensor\nimport runloop\n\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\nasync def drive_forward():\n    motor_pair.start(speed=40)\n\nasync def scan_for_obstacles():\n    while True:\n        await distance_sensor.wait_for_distance_closer_than(15, 'cm')\n        motor_pair.stop()\n\nrunloop.run(drive_forward(), scan_for_obstacles())` },
-                            { title: 'The Interruptible Delivery', code: `from spike import MotorPair, ColorSensor, ForceSensor, Motor\nimport runloop\n\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\nforce_sensor = ForceSensor('E')\nattachment_motor = Motor('F')\n\nasync def follow_line_mission():\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while True:\n        error = color_sensor.get_reflected_light() - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start(steering=steering, speed=30)\n        await runloop.sleep_ms(20)\n\nasync def watch_for_delivery():\n    while True:\n        await force_sensor.wait_until_pressed()\n        motor_pair.stop()\n        attachment_motor.run_for_rotations(1)\n        await runloop.sleep_ms(1000)\n\nrunloop.run(follow_line_mission(), watch_for_delivery())` },
+                            { title: 'Drive and Scan', code: `from spike import MotorPair, DistanceSensor\nimport runloop\n\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\n# 'async def' defines a task that can run in parallel.\nasync def drive_forward():\n    motor_pair.start(speed=40)\n\n# This is a second, parallel task.\nasync def scan_for_obstacles():\n    while True:\n        # 'await' pauses this task until the condition is met,\n        # allowing other tasks (like drive_forward) to run.\n        await distance_sensor.wait_for_distance_closer_than(15, 'cm')\n        motor_pair.stop()\n\n# runloop.run() starts all the tasks at the same time.\nrunloop.run(drive_forward(), scan_for_obstacles())` },
+                            { title: 'The Interruptible Delivery', code: `from spike import MotorPair, ColorSensor, ForceSensor, Motor\nimport runloop\n\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\nforce_sensor = ForceSensor('E')\nattachment_motor = Motor('F')\n\nasync def follow_line_mission():\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while True:\n        error = color_sensor.get_reflected_light() - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start(steering=steering, speed=30)\n        # This await is critical! It lets other tasks run.\n        await runloop.sleep_ms(20)\n\nasync def watch_for_delivery():\n    while True:\n        # This task just waits for the button to be pressed.\n        await force_sensor.wait_until_pressed()\n        # When pressed, it interrupts the other task.\n        motor_pair.stop()\n        attachment_motor.run_for_rotations(1)\n        await runloop.sleep_ms(1000)\n\nrunloop.run(follow_line_mission(), watch_for_delivery())` },
+                        ],
+                        explore: [
+                            { func: 'hub.left_button.wait_for_new_press()', desc: 'Waits for the hub\'s left button to be pressed. Must be used in an `async` function.', example: `async def wait_for_start():\n    hub.light_matrix.write('?')\n    await hub.left_button.wait_for_new_press()\n    # ... start mission ...`},
+                            { func: 'runloop.run(task1, task2)', desc: 'You can run multiple tasks. The robot can drive, watch a sensor, and blink its lights all at once!', example: `async def blink():\n    #...\nasync def drive():\n    #...\nasync def watch():\n    #...\nrunloop.run(blink(), drive(), watch())` }
                         ]
                     },
                     // Class 6
@@ -147,16 +167,25 @@
                         goal: 'Learn how to structure a program for a robotics competition. This involves creating separate, modular "mission" functions.',
                         concepts: ['Modular Programming', 'Mission Launcher'],
                         exercises: [
-                            { title: 'The Mission Launcher', code: `from spike import PrimeHub\nimport runloop\n\nhub = PrimeHub()\n\nasync def mission_one():\n    hub.light_matrix.write("M1")\n    print("Mission 1 Complete!")\n\nasync def mission_two():\n    hub.light_matrix.write("M2")\n    print("Mission 2 Complete!")\n\nasync def select_mission():\n    hub.light_matrix.write("?")\n    while True:\n        if await hub.left_button.wait_for_new_press():\n            await mission_one()\n            hub.light_matrix.write("?")\n\nrunloop.run(select_mission())` },
-                            { title: 'Full Mission Example', code: `from spike import PrimeHub, MotorPair, ColorSensor, DistanceSensor, Motor\nimport runloop\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\ndistance_sensor = DistanceSensor('D')\nattachment_motor = Motor('F')\n\nasync def line_to_wall_push_mission():\n    hub.motion_sensor.reset_yaw_angle()\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while distance_sensor.get_distance_cm() is None or distance_sensor.get_distance_cm() > 15:\n        error = color_sensor.get_reflected_light() - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start(steering=steering, speed=30)\n        await runloop.sleep_ms(20)\n    motor_pair.stop()\n    motor_pair.move(10, 'cm', steering=0, speed=25)\n    attachment_motor.run_for_rotations(1.5)\n    print("Mission Complete!")\n\nrunloop.run(line_to_wall_push_mission())` },
+                            { title: 'The Mission Launcher', code: `from spike import PrimeHub\nimport runloop\n\nhub = PrimeHub()\n\n# Define each mission as its own async function.\nasync def mission_one():\n    hub.light_matrix.write("M1")\n    # ... code for mission 1 ...\n    print("Mission 1 Complete!")\n\nasync def mission_two():\n    hub.light_matrix.write("M2")\n    # ... code for mission 2 ...\n    print("Mission 2 Complete!")\n\n# This main task acts as a menu.\nasync def select_mission():\n    hub.light_matrix.write("?")\n    while True:\n        # Wait for the left button to be pressed.\n        if await hub.left_button.wait_for_new_press():\n            print("Starting Mission 1")\n            # 'await' runs the mission and waits for it to finish.\n            await mission_one()\n            hub.light_matrix.write("?") # Show menu again\n        # Add another check for the right button here.\n        await runloop.sleep_ms(20)` },
+                            { title: 'Full Mission Example', code: `from spike import *\nimport runloop\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\ndistance_sensor = DistanceSensor('D')\nattachment_motor = Motor('F')\n\nasync def line_to_wall_push_mission():\n    print("Starting Mission!")\n    hub.motion_sensor.reset_yaw_angle()\n    \n    # --- Sub-task 1: Line Following ---\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    # Loop until the distance sensor sees the wall.\n    while distance_sensor.get_distance_cm() is None or distance_sensor.get_distance_cm() > 15:\n        error = color_sensor.get_reflected_light() - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start(steering=steering, speed=30)\n        await runloop.sleep_ms(20)\n        \n    motor_pair.stop()\n    print("Wall detected!")\n    \n    # --- Sub-task 2: Drive Straight and Push ---\n    motor_pair.move(10, 'cm', steering=0, speed=25)\n    attachment_motor.run_for_rotations(1.5)\n    attachment_motor.run_for_rotations(-1.5)\n    \n    print("Mission Complete!")\n    hub.light_matrix.show_image('HAPPY')\n\nrunloop.run(line_to_wall_push_mission())` },
+                        ],
+                        explore: [
+                            { func: 'print()', desc: 'Prints messages to the console. This is the most important tool for debugging your missions!', example: `print("Starting mission 1...")\n# ... code ...\nprint("Gyro angle is:", hub.motion_sensor.get_yaw_angle())`},
+                            { func: 'My Blocks', desc: 'The Spike Prime app lets you create "My Blocks" which are like functions. You can import them into Python!', example: `# In Word Blocks: Create "My Block" named "celebrate"\n# In Python:\nfrom my_blocks import celebrate\ncelebrate()`}
                         ]
                     },
                 ],
                 cheatsheet: [
                     { category: 'Hub', command: 'from spike import PrimeHub', desc: 'Imports the hub library.' },
+                    { category: 'Hub', command: 'hub = PrimeHub()', desc: 'Creates a hub object.' },
                     { category: 'Speaker', command: 'hub.speaker.beep(note=60, seconds=0.2)', desc: 'Plays a single note (20-120).' },
+                    { category: 'Speaker', command: 'hub.speaker.start_beep(note=72)', desc: 'Starts a continuous beep.' },
+                    { category: 'Speaker', command: 'hub.speaker.stop()', desc: 'Stops the continuous beep.' },
                     { category: 'Light Matrix', command: 'hub.light_matrix.write(\'Hi!\')', desc: 'Displays scrolling text.' },
+                    { category: 'Light Matrix', command: 'hub.light_matrix.show_image(\'HAPPY\')', desc: 'Shows a pre-made image.' },
                     { category: 'Light Matrix', command: 'hub.light_matrix.set_pixel(x, y, 100)', desc: 'Lights up one pixel (x,y from 0-4).' },
+                    { category: 'Light Matrix', command: 'hub.light_matrix.off()', desc: 'Turns all pixels off.' },
                     { category: 'Control', command: 'from spike.control import wait_for_seconds', desc: 'Imports control functions.' },
                     { category: 'Control', command: 'wait_for_seconds(1.5)', desc: 'Pauses the program for a number of seconds.' },
                     { category: 'Control', command: 'for i in range(5):', desc: 'Repeats the code inside 5 times.' },
@@ -166,10 +195,14 @@
                     { category: 'Motors', command: 'motor.run_for_rotations(2, speed=75)', desc: 'Runs motor for 2 rotations at 75% speed.' },
                     { category: 'Motors', command: 'motor_pair.move(15, \'cm\')', desc: 'Moves the robot 15 cm.' },
                     { category: 'Motors', command: 'motor_pair.start(steering=50)', desc: 'Starts motors with steering. 0 is straight.' },
+                    { category: 'Motors', command: 'motor_pair.stop()', desc: 'Stops the motors.' },
+                    { category: 'Motors', command: 'motor_pair.move_tank(1, \'rotations\', ls, rs)', desc: 'Moves with individual speeds for left (ls) and right (rs).' },
                     { category: 'Color Sensor', command: 'color_sensor = ColorSensor(\'C\')', desc: 'Creates a color sensor object.' },
                     { category: 'Color Sensor', command: 'color_sensor.get_color()', desc: 'Returns the name of the detected color.' },
                     { category: 'Color Sensor', command: 'color_sensor.get_reflected_light()', desc: 'Returns light intensity (0=dark, 100=bright).' },
+                    { category: 'Distance Sensor', command: 'distance_sensor = DistanceSensor(\'D\')', desc: 'Creates a distance sensor object.' },
                     { category: 'Distance Sensor', command: 'distance_sensor.get_distance_cm()', desc: 'Returns distance in cm. Can be `None`.' },
+                    { category: 'Force Sensor', command: 'force_sensor = ForceSensor(\'E\')', desc: 'Creates a force sensor object.' },
                     { category: 'Force Sensor', command: 'force_sensor.is_pressed()', desc: 'Returns `True` if pressed.' },
                     { category: 'Gyro Sensor', command: 'hub.motion_sensor.reset_yaw_angle()', desc: 'Resets the robot\'s "forward" direction to 0.' },
                     { category: 'Gyro Sensor', command: 'hub.motion_sensor.get_yaw_angle()', desc: 'Gets current rotation angle in degrees (-180 to 180).' },
@@ -209,10 +242,29 @@
                         <h4 class="text-xl font-semibold text-[#3D405B]">${ex.title}</h4>
                         <div class="code-block mt-2">
                             <button class="copy-btn" onclick="App.copyCode(this)">Copy</button>
-                            <pre><code class="language-python">${ex.code}</code></pre>
+                            <pre><code class="language-python">${ex.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
                         </div>
                     </div>
                 `).join('');
+
+                let exploreHtml = '';
+                if (classData.explore && classData.explore.length > 0) {
+                    exploreHtml = `
+                        <div class="mt-8 pt-6 border-t border-gray-200">
+                            <h4 class="text-2xl font-bold text-[#3D405B]">Explore More Functions</h4>
+                            ${classData.explore.map(item => `
+                                <div class="mt-4">
+                                    <p class="font-mono text-md text-pink-600">${item.func}</p>
+                                    <p class="text-gray-600 ml-2">${item.desc}</p>
+                                    <div class="code-block mt-2">
+                                        <button class="copy-btn" onclick="App.copyCode(this)">Copy</button>
+                                        <pre><code class="language-python">${item.example.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
 
                 contentEl.innerHTML = `
                     <h3 class="text-3xl font-bold text-[#D1523E]">${classData.title}</h3>
@@ -221,6 +273,7 @@
                         ${classData.concepts.map(c => `<span class="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">${c}</span>`).join('')}
                     </div>
                     ${exercisesHtml}
+                    ${exploreHtml}
                 `;
             },
             
@@ -288,7 +341,7 @@
             },
 
             renderCheatSheet(filter = '') {
-                const container = document.getElementById('cheatsheet-grid');
+                const container = document.getElementById('cheatsheet-content');
                 if (!container) return;
                 
                 const filteredData = this.data.cheatsheet.filter(item => 
@@ -297,16 +350,27 @@
                     item.category.toLowerCase().includes(filter.toLowerCase())
                 );
 
-                if(filteredData.length === 0) {
+                const grouped = filteredData.reduce((acc, item) => {
+                    (acc[item.category] = acc[item.category] || []).push(item);
+                    return acc;
+                }, {});
+
+                if(Object.keys(grouped).length === 0) {
                     container.innerHTML = `<p class="text-center text-gray-500 col-span-full">No commands found.</p>`;
                     return;
                 }
 
-                container.innerHTML = filteredData.map(item => `
-                    <div class="card p-4">
-                        <span class="text-xs font-semibold uppercase text-pink-600">${item.category}</span>
-                        <p class="font-mono text-sm bg-gray-100 p-2 rounded mt-1 break-words"><code>${item.command}</code></p>
-                        <p class="text-sm text-gray-600 mt-2">${item.desc}</p>
+                container.innerHTML = Object.keys(grouped).sort().map(category => `
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-bold text-[#3D405B] border-b-2 border-[#D1523E] pb-2 mb-4">${category}</h3>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${grouped[category].map(item => `
+                                <div class="card p-4 flex flex-col">
+                                    <p class="font-mono text-sm bg-gray-100 p-2 rounded break-words"><code>${item.command}</code></p>
+                                    <p class="text-sm text-gray-600 mt-2 flex-grow">${item.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
                 `).join('');
             },
@@ -426,7 +490,7 @@
                             <div class="my-8 max-w-lg mx-auto">
                                 <input type="text" id="cheatsheet-search" placeholder="🔎 Search commands (e.g., 'gyro', 'move', 'async')..." class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D1523E]">
                             </div>
-                            <div id="cheatsheet-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div id="cheatsheet-content">
                                 <!-- Cheat sheet items will be injected here -->
                             </div>
                         </div>
@@ -442,4 +506,3 @@
 
 </body>
 </html>
-'''}]), indent
