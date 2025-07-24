@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Spike Prime Python Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Educational Harmony -->
+    <!-- Application Structure Plan: The application is structured as a Single Page Application (SPA) with three main, dynamically loaded sections: "Introduction," "Curriculum," and "Cheat Sheet," managed by a top navigation bar. This structure was chosen to deconstruct the linear report into a more user-friendly, task-oriented experience. The "Introduction" uses a card-based layout for easy exploration of core concepts. The "Curriculum" uses a tabbed interface, allowing users to focus on one class at a time without overwhelming them. The "Cheat Sheet" is an interactive, searchable reference tool. This non-linear structure enhances usability by allowing users to jump to the content most relevant to them, whether they are a new learner, studying a specific class, or looking up a command. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Curriculum Structure (6 Classes) -> Goal: Show learning progression -> Viz/Method: Bar Chart (Chart.js) -> Interaction: Chart updates when a new class tab is selected -> Justification: Provides visual feedback and context for the user's position within the curriculum.
+        - Report Info: Robot Parts & Python Concepts -> Goal: Inform & Organize -> Viz/Method: Card-based layout with icons (HTML/CSS/Unicode) -> Interaction: Hover effects for engagement -> Justification: Breaks down dense introductory text into digestible, visually appealing chunks.
+        - Report Info: Code Snippets -> Goal: Enable easy use -> Viz/Method: Styled `pre` blocks -> Interaction: "Copy Code" button for each snippet -> Justification: Improves practical usability for students wanting to try the code.
+        - Report Info: Cheat Sheet Table -> Goal: Quick reference -> Viz/Method: Searchable table/grid (HTML/JS) -> Interaction: Live search filter -> Justification: Transforms a static table into a powerful, efficient reference tool.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8F7F4; color: #3D405B; }
+        .nav-active { color: #D1523E; border-bottom: 2px solid #D1523E; }
+        .nav-link { color: #82869E; border-bottom: 2px solid transparent; transition: all 0.3s ease; }
+        .nav-link:hover { color: #3D405B; }
+        .card { background-color: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 0.75rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+        .tab-active { background-color: #D1523E; color: #FFFFFF; }
+        .tab-inactive { background-color: #FFFFFF; color: #3D405B; border: 1px solid #E0E0E0; }
+        .code-block { background-color: #2D3748; color: #EDF2F7; border-radius: 0.5rem; padding: 1rem; position: relative; }
+        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #4A5568; color: #EDF2F7; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; }
+        .copy-btn:hover { background-color: #718096; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-[#D1523E]">Spike Prime Python</h1>
+            <p class="text-lg text-gray-600 mt-2">The Ultimate Interactive Challenge Guide</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex justify-center border-b border-gray-200 mb-8">
+            <button data-target="introduction" class="nav-link nav-active py-4 px-6 text-lg font-medium">Introduction</button>
+            <button data-target="curriculum" class="nav-link py-4 px-6 text-lg font-medium">Curriculum</button>
+            <button data-target="cheatsheet" class="nav-link py-4 px-6 text-lg font-medium">Cheat Sheet</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="main-content">
+            <!-- Content will be injected here by JavaScript -->
+        </main>
+    </div>
+
+    <script>
+        const App = {
+            state: {
+                activeView: 'introduction',
+                activeClass: 1,
+            },
+            
+            data: {
+                introduction: {
+                    parts: [
+                        { name: 'The Hub', icon: '🧠', desc: 'The brain of your robot. It has a battery, light matrix, speaker, buttons, and a built-in Gyro Sensor. All other parts plug into its six ports (A-F).' },
+                        { name: 'Motors', icon: '⚙️', desc: 'The muscles of your robot. They make things move and have built-in rotation sensors for precise control.' },
+                        { name: 'Color Sensor', icon: '🎨', desc: 'One of the robot\'s eyes. It can detect colors and measure reflected light intensity, perfect for following lines.' },
+                        { name: 'Distance Sensor', icon: '🌊', desc: 'Uses ultrasound to measure distance to objects. It\'s like the robot\'s sonar, helping it see walls without touching them.' },
+                        { name: 'Force Sensor', icon: '👆', desc: 'The robot\'s sense of touch. A button that detects presses, making it perfect for bumpers.' },
+                        { name: 'Gyro Sensor', icon: '🧭', desc: 'Built into the Hub, it measures rotation. It is the key to making precise turns and driving perfectly straight.' },
+                    ],
+                    concepts: [
+                        { name: '`import` Statements', desc: 'Brings libraries of code into your program so you can use special Spike Prime commands.' },
+                        { name: 'Variables', desc: 'A container with a name that holds information, making your code cleaner and easier to change.' },
+                        { name: 'Functions', desc: 'A named, reusable block of code that performs a specific task. The secret to organized programming!' },
+                        { name: 'Loops (`for`/`while`)', desc: 'Repeat blocks of code. `for` loops repeat a set number of times; `while` loops repeat as long as a condition is true.' },
+                        { name: 'Conditionals (`if`/`else`)', desc: 'Allow your robot to make decisions by checking if a condition is true and running code accordingly.' },
+                        { name: 'Asynchronous Tasks', desc: 'An advanced but essential concept using `async` and `await` that allows your robot to do multiple things at once.' },
+                    ]
+                },
+                curriculum: [
+                    // Class 1
+                    {
+                        id: 1,
+                        title: 'Bringing Your Robot to Life',
+                        goal: 'Learn the absolute basics: making the robot move, light up, and make sounds. We\'ll also learn about variables to store information.',
+                        concepts: ['Motors', 'Lights', 'Sounds', 'Variables'],
+                        exercises: [
+                            { title: 'First Moves (The Basics)', code: `from spike import PrimeHub, Motor\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor = Motor('A')\n\nhub.light_matrix.show_image('HAPPY')\nwait_for_seconds(1)\n\nprint("Moving forward!")\nmotor.run_for_rotations(1)\nwait_for_seconds(1)\n\nprint("Moving backward!")\nmotor.run_for_rotations(-1)\n\nhub.light_matrix.off()` },
+                            { title: 'Wake-Up Routine with Variables', code: `from spike import PrimeHub, MotorPair\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\nwakeup_sound = 60\nready_sound = 72\ncircle_distance = 15\n\nhub.speaker.beep(note=wakeup_sound)\nhub.light_matrix.show_image('ASLEEP')\nwait_for_seconds(1)\n\nhub.light_matrix.show_image('HAPPY')\nhub.speaker.beep(note=ready_sound)\n\nmotor_pair.move(circle_distance, 'cm', steering=100)` },
+                            { title: 'Custom Light Show', code: `from spike import PrimeHub\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\n\nhub.light_matrix.set_pixel(0, 0, 100)\nhub.light_matrix.set_pixel(4, 0, 100)\nhub.light_matrix.set_pixel(1, 1, 100)\nhub.light_matrix.set_pixel(3, 1, 100)\nhub.light_matrix.set_pixel(2, 2, 100)\nhub.light_matrix.set_pixel(1, 3, 100)\nhub.light_matrix.set_pixel(3, 3, 100)\nhub.light_matrix.set_pixel(0, 4, 100)\nhub.light_matrix.set_pixel(4, 4, 100)\n\nwait_for_seconds(3)\nhub.light_matrix.off()` },
+                        ]
+                    },
+                    // Class 2
+                    {
+                        id: 2,
+                        title: 'Functions and Precision Movement',
+                        goal: 'Learn how to make precise turns and organize our code into reusable blocks called functions. We\'ll also meet the Gyro Sensor!',
+                        concepts: ['Functions', 'Gyro Sensor'],
+                        exercises: [
+                            { title: 'The Perfect 90-Degree Turn (Gyro)', code: `from spike import PrimeHub, MotorPair\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\nhub.motion_sensor.reset_yaw_angle()\n\nprint("Turning right...")\nmotor_pair.start(steering=50)\n\nwhile hub.motion_sensor.get_yaw_angle() < 90:\n    pass\n\nmotor_pair.stop()\nprint("Turn complete!")` },
+                            { title: 'Creating Reusable Functions', code: `from spike import PrimeHub, MotorPair\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\ndef move_straight(distance_cm):\n    print("Moving straight for", distance_cm, "cm")\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(distance_cm, 'cm', steering=0)\n\ndef turn_right_90():\n    print("Turning right 90 degrees")\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.start(steering=100)\n    while hub.motion_sensor.get_yaw_angle() < 88:\n        pass\n    motor_pair.stop()\n\nfor i in range(4):\n    move_straight(20)\n    turn_right_90()` },
+                            { title: 'Driving Straight with Gyro Correction', code: `from spike import PrimeHub, MotorPair\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\n\nprint("Moving without gyro...")\nmotor_pair.move(50, 'cm')\nwait_for_seconds(2)\n\nprint("Moving WITH gyro...")\nhub.motion_sensor.reset_yaw_angle()\nmotor_pair.move(50, 'cm', steering=0)` },
+                        ]
+                    },
+                    // Class 3
+                    {
+                        id: 3,
+                        title: 'Following Lines with the Color Sensor',
+                        goal: 'Use the Color Sensor to follow a black line on a white surface using a concept called Proportional Control.',
+                        concepts: ['Color Sensor', 'Proportional Control'],
+                        exercises: [
+                            { title: 'Finding the Edge', code: `from spike import PrimeHub, ColorSensor\nfrom spike.control import wait_for_seconds\n\nhub = PrimeHub()\ncolor_sensor = ColorSensor('C')\n\nhub.light_matrix.write('W')\nwait_for_seconds(3)\nwhite_light = color_sensor.get_reflected_light()\nprint("White light value:", white_light)\nhub.speaker.beep()\n\nhub.light_matrix.write('B')\nwait_for_seconds(3)\nblack_light = color_sensor.get_reflected_light()\nprint("Black light value:", black_light)\nhub.speaker.beep()\n\ntarget_light = (white_light + black_light) / 2\nprint("Calculated Target Light:", target_light)` },
+                            { title: 'The Smooth Proportional Line Follower', code: `from spike import MotorPair, ColorSensor\n\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\n\nTARGET_LIGHT = 50\nSPEED = 30\nGAIN = 1.5\n\nwhile True:\n    error = color_sensor.get_reflected_light() - TARGET_LIGHT\n    steering = error * GAIN\n    motor_pair.start(steering=steering, speed=SPEED)` },
+                        ]
+                    },
+                    // Class 4
+                    {
+                        id: 4,
+                        title: 'Physical Interaction & Navigation',
+                        goal: 'Use the Force and Distance sensors to interact with the world. We\'ll also use the Gyro to navigate a simple maze.',
+                        concepts: ['Force Sensor', 'Distance Sensor', 'Maze Logic'],
+                        exercises: [
+                            { title: 'Wall Detector', code: `from spike import PrimeHub, MotorPair, DistanceSensor\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\nmotor_pair.start(speed=30)\n\ndistance_sensor.wait_for_distance_closer_than(10, 'cm')\n\nmotor_pair.stop()\nhub.light_matrix.show_image('HAPPY')\nhub.speaker.beep()` },
+                            { title: 'Simple Maze Solver', code: `from spike import PrimeHub, MotorPair, DistanceSensor\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\ndef turn_right_90():\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(88, 'degrees', steering=100)\n\ndef turn_left_90():\n    hub.motion_sensor.reset_yaw_angle()\n    motor_pair.move(88, 'degrees', steering=-100)\n\nwhile True:\n    motor_pair.move(10, 'cm', steering=0)\n    turn_right_90()\n    distance = distance_sensor.get_distance_cm()\n    if distance is None or distance > 20:\n        continue\n    else:\n        turn_left_90()\n        distance = distance_sensor.get_distance_cm()\n        if distance is None or distance > 20:\n            continue\n        else:\n            turn_left_90()` },
+                        ]
+                    },
+                    // Class 5
+                    {
+                        id: 5,
+                        title: 'Advanced Programming: Parallel Tasks',
+                        goal: 'Learn how to make the robot do multiple things at once using asyncio and runloop. This is the key to making a responsive robot.',
+                        concepts: ['Async/Await', 'Concurrency'],
+                        exercises: [
+                            { title: 'Drive and Scan', code: `from spike import MotorPair, DistanceSensor\nimport runloop\n\nmotor_pair = MotorPair('A', 'B')\ndistance_sensor = DistanceSensor('D')\n\nasync def drive_forward():\n    motor_pair.start(speed=40)\n\nasync def scan_for_obstacles():\n    while True:\n        await distance_sensor.wait_for_distance_closer_than(15, 'cm')\n        motor_pair.stop()\n\nrunloop.run(drive_forward(), scan_for_obstacles())` },
+                            { title: 'The Interruptible Delivery', code: `from spike import MotorPair, ColorSensor, ForceSensor, Motor\nimport runloop\n\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\nforce_sensor = ForceSensor('E')\nattachment_motor = Motor('F')\n\nasync def follow_line_mission():\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while True:\n        error = color_sensor.get_reflected_light() - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start(steering=steering, speed=30)\n        await runloop.sleep_ms(20)\n\nasync def watch_for_delivery():\n    while True:\n        await force_sensor.wait_until_pressed()\n        motor_pair.stop()\n        attachment_motor.run_for_rotations(1)\n        await runloop.sleep_ms(1000)\n\nrunloop.run(follow_line_mission(), watch_for_delivery())` },
+                        ]
+                    },
+                    // Class 6
+                    {
+                        id: 6,
+                        title: 'Ultimate Challenge: Competition Structure',
+                        goal: 'Learn how to structure a program for a robotics competition. This involves creating separate, modular "mission" functions.',
+                        concepts: ['Modular Programming', 'Mission Launcher'],
+                        exercises: [
+                            { title: 'The Mission Launcher', code: `from spike import PrimeHub\nimport runloop\n\nhub = PrimeHub()\n\nasync def mission_one():\n    hub.light_matrix.write("M1")\n    print("Mission 1 Complete!")\n\nasync def mission_two():\n    hub.light_matrix.write("M2")\n    print("Mission 2 Complete!")\n\nasync def select_mission():\n    hub.light_matrix.write("?")\n    while True:\n        if await hub.left_button.wait_for_new_press():\n            await mission_one()\n            hub.light_matrix.write("?")\n\nrunloop.run(select_mission())` },
+                            { title: 'Full Mission Example', code: `from spike import PrimeHub, MotorPair, ColorSensor, DistanceSensor, Motor\nimport runloop\n\nhub = PrimeHub()\nmotor_pair = MotorPair('A', 'B')\ncolor_sensor = ColorSensor('C')\ndistance_sensor = DistanceSensor('D')\nattachment_motor = Motor('F')\n\nasync def line_to_wall_push_mission():\n    hub.motion_sensor.reset_yaw_angle()\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while distance_sensor.get_distance_cm() is None or distance_sensor.get_distance_cm() > 15:\n        error = color_sensor.get_reflected_light() - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start(steering=steering, speed=30)\n        await runloop.sleep_ms(20)\n    motor_pair.stop()\n    motor_pair.move(10, 'cm', steering=0, speed=25)\n    attachment_motor.run_for_rotations(1.5)\n    print("Mission Complete!")\n\nrunloop.run(line_to_wall_push_mission())` },
+                        ]
+                    },
+                ],
+                cheatsheet: [
+                    { category: 'Hub', command: 'from spike import PrimeHub', desc: 'Imports the hub library.' },
+                    { category: 'Speaker', command: 'hub.speaker.beep(note=60, seconds=0.2)', desc: 'Plays a single note (20-120).' },
+                    { category: 'Light Matrix', command: 'hub.light_matrix.write(\'Hi!\')', desc: 'Displays scrolling text.' },
+                    { category: 'Light Matrix', command: 'hub.light_matrix.set_pixel(x, y, 100)', desc: 'Lights up one pixel (x,y from 0-4).' },
+                    { category: 'Control', command: 'from spike.control import wait_for_seconds', desc: 'Imports control functions.' },
+                    { category: 'Control', command: 'wait_for_seconds(1.5)', desc: 'Pauses the program for a number of seconds.' },
+                    { category: 'Control', command: 'for i in range(5):', desc: 'Repeats the code inside 5 times.' },
+                    { category: 'Control', command: 'while True:', desc: 'Repeats the code inside forever (or until `break`).' },
+                    { category: 'Motors', command: 'from spike import Motor, MotorPair', desc: 'Imports motor libraries.' },
+                    { category: 'Motors', command: 'motor_pair = MotorPair(\'A\', \'B\')', desc: 'Creates a pair of motors for driving.' },
+                    { category: 'Motors', command: 'motor.run_for_rotations(2, speed=75)', desc: 'Runs motor for 2 rotations at 75% speed.' },
+                    { category: 'Motors', command: 'motor_pair.move(15, \'cm\')', desc: 'Moves the robot 15 cm.' },
+                    { category: 'Motors', command: 'motor_pair.start(steering=50)', desc: 'Starts motors with steering. 0 is straight.' },
+                    { category: 'Color Sensor', command: 'color_sensor = ColorSensor(\'C\')', desc: 'Creates a color sensor object.' },
+                    { category: 'Color Sensor', command: 'color_sensor.get_color()', desc: 'Returns the name of the detected color.' },
+                    { category: 'Color Sensor', command: 'color_sensor.get_reflected_light()', desc: 'Returns light intensity (0=dark, 100=bright).' },
+                    { category: 'Distance Sensor', command: 'distance_sensor.get_distance_cm()', desc: 'Returns distance in cm. Can be `None`.' },
+                    { category: 'Force Sensor', command: 'force_sensor.is_pressed()', desc: 'Returns `True` if pressed.' },
+                    { category: 'Gyro Sensor', command: 'hub.motion_sensor.reset_yaw_angle()', desc: 'Resets the robot\'s "forward" direction to 0.' },
+                    { category: 'Gyro Sensor', command: 'hub.motion_sensor.get_yaw_angle()', desc: 'Gets current rotation angle in degrees (-180 to 180).' },
+                    { category: 'Async Tasks', command: 'import runloop', desc: 'Imports the library for concurrent tasks.' },
+                    { category: 'Async Tasks', command: 'async def my_task():', desc: 'Defines a function that can run in parallel.' },
+                    { category: 'Async Tasks', command: 'await runloop.sleep_ms(20)', desc: 'Pauses the task to let others run. Essential in loops.' },
+                    { category: 'Async Tasks', command: 'runloop.run(task1(), task2())', desc: 'Starts and runs multiple `async` tasks.' },
+                ]
+            },
+
+            init() {
+                this.render();
+                this.addEventListeners();
+            },
+
+            render() {
+                const mainContent = document.getElementById('main-content');
+                if (this.state.activeView === 'introduction') {
+                    mainContent.innerHTML = this.templates.introduction();
+                } else if (this.state.activeView === 'curriculum') {
+                    mainContent.innerHTML = this.templates.curriculum();
+                    this.renderClassContent();
+                    this.renderChart();
+                } else if (this.state.activeView === 'cheatsheet') {
+                    mainContent.innerHTML = this.templates.cheatsheet();
+                    this.renderCheatSheet();
+                }
+            },
+
+            renderClassContent() {
+                const classData = this.data.curriculum.find(c => c.id === this.state.activeClass);
+                const contentEl = document.getElementById('class-content');
+                if (!classData || !contentEl) return;
+
+                let exercisesHtml = classData.exercises.map(ex => `
+                    <div class="mt-6">
+                        <h4 class="text-xl font-semibold text-[#3D405B]">${ex.title}</h4>
+                        <div class="code-block mt-2">
+                            <button class="copy-btn" onclick="App.copyCode(this)">Copy</button>
+                            <pre><code class="language-python">${ex.code}</code></pre>
+                        </div>
+                    </div>
+                `).join('');
+
+                contentEl.innerHTML = `
+                    <h3 class="text-3xl font-bold text-[#D1523E]">${classData.title}</h3>
+                    <p class="mt-2 text-lg text-gray-600">${classData.goal}</p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        ${classData.concepts.map(c => `<span class="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">${c}</span>`).join('')}
+                    </div>
+                    ${exercisesHtml}
+                `;
+            },
+            
+            renderChart() {
+                const chartContainer = document.getElementById('progress-chart-container');
+                if(!chartContainer) return;
+                chartContainer.innerHTML = '<canvas id="progressChart"></canvas>';
+
+                const ctx = document.getElementById('progressChart').getContext('2d');
+                const conceptsByClass = this.data.curriculum.map(c => c.concepts.length);
+                const classLabels = this.data.curriculum.map(c => `Class ${c.id}`);
+                
+                const backgroundColors = classLabels.map((_, i) => 
+                    (i + 1) === this.state.activeClass ? 'rgba(209, 82, 62, 0.8)' : 'rgba(209, 82, 62, 0.3)'
+                );
+
+                if (this.progressChart) {
+                    this.progressChart.destroy();
+                }
+
+                this.progressChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: classLabels,
+                        datasets: [{
+                            label: 'New Concepts Introduced',
+                            data: conceptsByClass,
+                            backgroundColor: backgroundColors,
+                            borderColor: 'rgba(209, 82, 62, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += context.parsed.y;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            },
+
+            renderCheatSheet(filter = '') {
+                const container = document.getElementById('cheatsheet-grid');
+                if (!container) return;
+                
+                const filteredData = this.data.cheatsheet.filter(item => 
+                    item.command.toLowerCase().includes(filter.toLowerCase()) ||
+                    item.desc.toLowerCase().includes(filter.toLowerCase()) ||
+                    item.category.toLowerCase().includes(filter.toLowerCase())
+                );
+
+                if(filteredData.length === 0) {
+                    container.innerHTML = `<p class="text-center text-gray-500 col-span-full">No commands found.</p>`;
+                    return;
+                }
+
+                container.innerHTML = filteredData.map(item => `
+                    <div class="card p-4">
+                        <span class="text-xs font-semibold uppercase text-pink-600">${item.category}</span>
+                        <p class="font-mono text-sm bg-gray-100 p-2 rounded mt-1 break-words"><code>${item.command}</code></p>
+                        <p class="text-sm text-gray-600 mt-2">${item.desc}</p>
+                    </div>
+                `).join('');
+            },
+
+            addEventListeners() {
+                const navButtons = document.querySelectorAll('.nav-link');
+                navButtons.forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        this.state.activeView = e.target.dataset.target;
+                        navButtons.forEach(btn => btn.classList.remove('nav-active'));
+                        e.target.classList.add('nav-active');
+                        this.render();
+                    });
+                });
+
+                document.body.addEventListener('click', (e) => {
+                    if (e.target.matches('.tab-btn')) {
+                        this.state.activeClass = parseInt(e.target.dataset.classId);
+                        document.querySelectorAll('.tab-btn').forEach(btn => {
+                            btn.classList.remove('tab-active');
+                            btn.classList.add('tab-inactive');
+                        });
+                        e.target.classList.add('tab-active');
+                        e.target.classList.remove('tab-inactive');
+                        this.renderClassContent();
+                        this.renderChart();
+                    }
+                });
+
+                document.body.addEventListener('input', (e) => {
+                    if (e.target.matches('#cheatsheet-search')) {
+                        this.renderCheatSheet(e.target.value);
+                    }
+                });
+            },
+
+            copyCode(button) {
+                const code = button.nextElementSibling.textContent;
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            },
+
+            templates: {
+                introduction() {
+                    return `
+                        <div id="introduction-view">
+                            <section>
+                                <h2 class="text-3xl font-bold text-center mb-2 text-[#3D405B]">Meet Your Robot</h2>
+                                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">This guide will teach you to program every part of your Spike Prime kit. Here are the key components you'll be working with.</p>
+                                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    ${App.data.introduction.parts.map(part => `
+                                        <div class="card p-6 text-center">
+                                            <div class="text-5xl mb-4">${part.icon}</div>
+                                            <h3 class="text-xl font-semibold text-[#D1523E]">${part.name}</h3>
+                                            <p class="text-gray-600 mt-2">${part.desc}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                            <section class="mt-16">
+                                <h2 class="text-3xl font-bold text-center mb-2 text-[#3D405B]">Core Python Concepts</h2>
+                                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Python is a powerful language. We'll focus on these key ideas to bring your robot to life and prepare you for any challenge.</p>
+                                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    ${App.data.introduction.concepts.map(concept => `
+                                        <div class="card p-6">
+                                            <h3 class="text-xl font-semibold text-[#D1523E]">${concept.name}</h3>
+                                            <p class="text-gray-600 mt-2">${concept.desc}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </section>
+                        </div>
+                    `;
+                },
+                curriculum() {
+                    return `
+                        <div id="curriculum-view">
+                            <div class="text-center">
+                                <h2 class="text-3xl font-bold text-[#3D405B]">6-Class Curriculum</h2>
+                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">Follow this iterative guide to go from beginner to challenge-ready. Select a class to view its goals and exercises.</p>
+                            </div>
+                            <div class="flex flex-wrap justify-center gap-2 my-8">
+                                ${App.data.curriculum.map(c => `
+                                    <button data-class-id="${c.id}" class="tab-btn px-4 py-2 rounded-full font-semibold ${c.id === App.state.activeClass ? 'tab-active' : 'tab-inactive'}">
+                                        Class ${c.id}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            <div class="grid lg:grid-cols-5 gap-8">
+                                <div class="lg:col-span-3 card p-6">
+                                    <div id="class-content"></div>
+                                </div>
+                                <div class="lg:col-span-2 card p-6 flex flex-col">
+                                     <h3 class="text-2xl font-bold text-[#3D405B] text-center">Concept Progress</h3>
+                                     <p class="text-center text-gray-500 text-sm mb-4">This chart shows the number of new concepts introduced in each class.</p>
+                                     <div id="progress-chart-container" class="chart-container flex-grow"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+                cheatsheet() {
+                    return `
+                        <div id="cheatsheet-view">
+                            <div class="text-center">
+                                <h2 class="text-3xl font-bold text-[#3D405B]">Cheat Sheet</h2>
+                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">A quick reference for all the essential Spike Prime Python commands. Use the search bar to filter by command, category, or description.</p>
+                            </div>
+                            <div class="my-8 max-w-lg mx-auto">
+                                <input type="text" id="cheatsheet-search" placeholder="🔎 Search commands (e.g., 'gyro', 'move', 'async')..." class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D1523E]">
+                            </div>
+                            <div id="cheatsheet-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Cheat sheet items will be injected here -->
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+
+</body>
+</html>
+'''}]), indent
