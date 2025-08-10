@@ -90,7 +90,7 @@
                         goal: 'Learn the absolute basics: making the robot move, light up, and make sounds. We\'ll also learn about variables to store information.',
                         concepts: ['Motors', 'Lights', 'Sounds', 'Variables'],
                         exercises: [
-                            { title: 'First Moves (The Basics)', code: `from hub import light_matrix, sound, port
+                            { title: 'First Moves (The Basics)', code: `from hub import light_matrix, port
 import runloop, motor
 
 async def main():
@@ -100,29 +100,27 @@ async def main():
 
     # Tell the console what we are doing.
     print("Moving forward!")
-    # Run the motor on Port A forward for 1 full rotation (360 degrees).
+    # Run the motor on Port A forward for 1 full rotation (360 degrees) at 500 °/s.
     await motor.run_for_degrees(port.A, 360, 500)
     await runloop.sleep_ms(1000)
 
     print("Moving backward!")
-    # A negative velocity makes the motor run in reverse.
+    # Negative velocity runs in reverse.
     await motor.run_for_degrees(port.A, 360, -500)
 
     # Turn all the lights off.
     light_matrix.off()
 
 runloop.run(main())` },
-                            { title: 'Wake-Up Routine with Variables', code: `from hub import light_matrix, port
-from app import sound
-import runloop, motor_pair, motor
+                            { title: 'Wake-Up Routine with Variables', code: `from hub import light_matrix, sound, port
+import runloop, motor_pair
 
 # Initialize a pair for motors in Port A and B.
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
 # --- Variables --- 
-# Variables store information with a name.
-wakeup_sound_note = 60 # MIDI note (C4).
-ready_sound_note = 72  # MIDI note (C5).
+wakeup_sound_note = 60  # MIDI note (C4).
+ready_sound_note = 72   # MIDI note (C5).
 circle_distance_cm = 15 # The distance in cm.
 
 async def main():
@@ -134,9 +132,9 @@ async def main():
     light_matrix.show_image(light_matrix.IMAGE_HEART)
     await sound.beep(ready_sound_note, 200)
 
-    # Move in a circle using our distance variable.
-    # Steering = 100 makes a sharp right turn.
-    await motor_pair.move_for_degrees(motor_pair.PAIR_1,  (circle_distance_cm / 17.5) * 360, 100, velocity=300)
+    # Move in a circle using our distance variable (convert cm -> degrees).
+    degrees = int((circle_distance_cm / 17.5) * 360)  # wheel ~17.5 cm/rotation
+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, degrees, 100, velocity=300)
 
 runloop.run(main())` },
                             { title: 'Custom Light Show', code: `from hub import light_matrix
@@ -146,7 +144,7 @@ import runloop
 # X is horizontal (0-4), Y is vertical (0-4).
 
 async def main():
-    # Let's draw a simple 'X'
+    # Draw an 'X'
     light_matrix.set_pixel(0, 0, brightness=100)
     light_matrix.set_pixel(4, 0, brightness=100)
     light_matrix.set_pixel(1, 1, brightness=100)
@@ -161,16 +159,33 @@ async def main():
     light_matrix.off()
 
 runloop.run(main())` },
+                            { title: 'Button Start/Stop (New)', code: `from hub import button, port
+import runloop, motor
+
+async def main():
+    print("Hold LEFT to spin motor A; release to stop.")
+    while True:
+        if button.pressed(button.LEFT):
+            # Nudge forward 90° repeatedly while held
+            await motor.run_for_degrees(port.A, 90, 600)
+        else:
+            motor.stop(port.A)
+        await runloop.sleep_ms(50)
+
+runloop.run(main())` },
                         ],
                         explore: [
-                            { func: 'app.sound.play()', desc: 'Plays a built-in sound file from the app library.', example: `from app import sound
-# Plays a cat sound.
-await sound.play('Cat Miaow 1')`},
+                            { func: 'sound.beep()', desc: 'Beep with a specific frequency (Hz) and duration (ms).', example: `from hub import sound
+import runloop
+async def tones():
+    for f in [440, 523, 659]:
+        await sound.beep(f, 200)
+        await runloop.sleep_ms(100)`},
                             { func: 'motor_pair.move_tank()', desc: 'Controls the speed of each motor individually for custom turns.', example: `from hub import port
 import motor_pair
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
-# This makes the robot curve to the right.
-motor_pair.move_tank(motor_pair.PAIR_1, 75, 25)` }
+# Curve right (left faster than right)
+motor_pair.move_tank(motor_pair.PAIR_1, 75, 25)`}
                         ]
                     },
                     // Class 2
@@ -185,20 +200,21 @@ import motor_pair
 
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
-# reset_yaw_angle sets the robot's current direction to 0.
-# This is CRITICAL for accurate turns.
-motion_sensor.reset_yaw_angle()
+# Reset yaw to define current heading as 0.
+motion_sensor.reset_yaw()
 
 print("Turning right...")
 # Start turning at a moderate speed (tank style).
 motor_pair.move_tank(motor_pair.PAIR_1, 50, -50)
 
-# A 'while' loop repeats as long as the condition is true.
-# We wait here until the angle is >= 90.
-while motion_sensor.get_yaw_angle() < 90:
-    pass
+# Loop until the yaw reaches ~90 degrees.
+# motion_sensor.tilt_angles()[0] is yaw in tenths of a degree; multiply by -0.1 for dashboard-like degrees.
+while True:
+    yaw_deg = -0.1 * motion_sensor.tilt_angles()[0]
+    if yaw_deg >= 90:
+        break
 
-# As soon as the loop finishes, stop the motors.
+# Stop the motors.
 motor_pair.stop(motor_pair.PAIR_1)
 print("Turn complete!")` },
                             { title: 'Creating Reusable Functions', code: `from hub import motion_sensor, port
@@ -206,53 +222,47 @@ import motor_pair
 
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
-# 'def' defines a function. This code can be reused.
 def move_straight(distance_cm):
     print("Moving straight for", distance_cm, "cm")
-    motion_sensor.reset_yaw_angle()
-    # The move command uses steering=0 and gyro helps keep straight.
-    motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
-    # Simple distance control using degrees:
-    degrees = (distance_cm / 17.5) * 360
+    motion_sensor.reset_yaw()
+    degrees = int((distance_cm / 17.5) * 360)
+    # 0 steering = straight
     motor_pair.move_for_degrees(motor_pair.PAIR_1, degrees, 0, velocity=300)
 
 def turn_right_90():
     print("Turning right 90 degrees")
-    motion_sensor.reset_yaw_angle()
-    # Turning by a specific number of motor degrees.
+    motion_sensor.reset_yaw()
     motor_pair.move_for_degrees(motor_pair.PAIR_1, 575, 100, velocity=300)
 
-# A 'for' loop repeats the code inside a set number of times.
 for i in range(4):
-    # Call our functions to draw a square.
     move_straight(20)
     turn_right_90()` },
                             { title: 'Driving Straight with Gyro Correction', code: `from hub import motion_sensor, port
-import motor_pair
-import runloop
+import motor_pair, runloop
 
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
-# This move relies only on the motors running at the same speed.
-print("Moving without gyro (using move_tank)...")
-motor_pair.move_tank(motor_pair.PAIR_1, 50, 50)
-await runloop.sleep_ms(2000)
-motor_pair.stop(motor_pair.PAIR_1)
-await runloop.sleep_ms(2000)
+async def main():
+    print("Moving without gyro (tank)...")
+    motor_pair.move_tank(motor_pair.PAIR_1, 50, 50)
+    await runloop.sleep_ms(2000)
+    motor_pair.stop(motor_pair.PAIR_1)
+    await runloop.sleep_ms(1000)
 
-# This move uses the gyro to actively correct any deviation.
-print("Moving WITH gyro (using move_for_degrees)...")
-motion_sensor.reset_yaw_angle()
-await motor_pair.move_for_degrees(motor_pair.PAIR_1,  (50 / 17.5) * 360, 0, velocity=300)` },
+    print("Moving WITH gyro (degrees + steering=0)...")
+    motion_sensor.reset_yaw()
+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, int((50 / 17.5) * 360), 0, velocity=300)
+
+runloop.run(main())` },
                         ],
                         explore: [
-                            { func: 'motion_sensor.get_pitch_angle()', desc: 'Gets the up/down tilt of the Hub. Useful for detecting ramps or if the robot has fallen over.', example: `from hub import motion_sensor
-pitch = motion_sensor.get_pitch_angle()
-print("Current tilt:", pitch)`},
-                            { func: 'motor.get_position()', desc: 'Gets the motor\'s rotation in degrees relative to when the program started.', example: `from hub import port
+                            { func: 'motion_sensor.tilt_angles()', desc: 'Read (yaw, pitch, roll). Convert yaw to degrees with -0.1 * value.', example: `from hub import motion_sensor
+yaw_deg = -0.1 * motion_sensor.tilt_angles()[0]
+print("Yaw:", yaw_deg)`},
+                            { func: 'motor.get_position()', desc: 'Read absolute motor position since start.', example: `from hub import port
 import motor
-position = motor.get_position(port.A)
-print("Motor has turned", position, "degrees.")`}
+deg = motor.get_position(port.A)
+print("Motor A:", deg, "degrees")`}
                         ]
                     },
                     // Class 3
@@ -262,8 +272,7 @@ print("Motor has turned", position, "degrees.")`}
                         goal: 'Use the Color Sensor to follow a black line on a white surface using a concept called Proportional Control.',
                         concepts: ['Color Sensor', 'Proportional Control'],
                         exercises: [
-                            { title: 'Finding the Edge', code: `from hub import light_matrix, port
-from app import sound
+                            { title: 'Finding the Edge', code: `from hub import light_matrix, sound, port
 import runloop, color_sensor
 
 # reflection() returns a value from 0 (dark) to 100 (bright).
@@ -279,7 +288,7 @@ black_light = color_sensor.reflection(port.C)
 print("Black light value:", black_light)
 await sound.beep(440, 150)
 
-# The ideal target for the edge of a line is halfway between the two values.
+# Target is midway between black and white
 target_light = (white_light + black_light) / 2
 print("Calculated Target Light:", target_light)` },
                             { title: 'The Smooth Proportional Line Follower', code: `from hub import port
@@ -287,29 +296,36 @@ import motor_pair, color_sensor
 
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
-# Constants are variables that don't change. We use ALL_CAPS.
+# Constants
 TARGET_LIGHT = 50
 SPEED = 30
-# GAIN is a multiplier. Higher gain = sharper turns.
 GAIN = 1.5
 
 while True:
-    # 1. Calculate the 'error' - how far are we from the target?
-    # Positive error = too bright (on white), Negative = too dark (on black)
+    # 1) Error: how far from target light?
     error = color_sensor.reflection(port.C) - TARGET_LIGHT
-
-    # 2. Calculate the steering value by multiplying error by gain.
+    # 2) Steering correction
     steering = error * GAIN
-
-    # 3. Apply the correction using move_tank for smooth, direct control.
+    # 3) Apply correction (tank control)
     motor_pair.move_tank(motor_pair.PAIR_1, SPEED + steering, SPEED - steering)` },
+                            { title: 'Stop on Blue (New)', code: `from hub import port
+import motor_pair, color_sensor, color
+
+motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
+motor_pair.move_tank(motor_pair.PAIR_1, 40, 40)
+
+while True:
+    if color_sensor.color(port.C) is color.BLUE:
+        motor_pair.stop(motor_pair.PAIR_1)
+        print("Blue detected — stopped.")
+        break` },
                         ],
                         explore: [
-                            { func: 'color_sensor.get_rgb()', desc: 'Gets the intensity of Red, Green, and Blue light separately.', example: `from hub import port
+                            { func: 'color_sensor.get_rgb()', desc: 'Get raw R/G/B intensities.', example: `from hub import port
 import color_sensor
 r, g, b = color_sensor.get_rgb(port.C)
 print("Red:", r)`},
-                            { func: 'import color', desc: 'The API provides named constants for colors.', example: `from hub import port
+                            { func: 'color enums', desc: 'Use named color constants.', example: `from hub import port
 import color_sensor, color
 if color_sensor.color(port.C) is color.BLUE:
     print("I see blue!")`}
@@ -322,39 +338,41 @@ if color_sensor.color(port.C) is color.BLUE:
                         goal: 'Use the Force and Distance sensors to interact with the world. We\'ll also use the Gyro to navigate a simple maze.',
                         concepts: ['Force Sensor', 'Distance Sensor', 'Maze Logic'],
                         exercises: [
-                            { title: 'Wall Detector', code: `from hub import light_matrix, port
-from app import sound
-import motor_pair, distance_sensor
+                            { title: 'Wall Detector', code: `from hub import light_matrix, sound, port
+import motor_pair, distance_sensor, runloop
 
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
-motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
+async def main():
+    motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
 
-# This loop waits for the condition to be met.
-# It checks the distance, and if it's valid and less than 100 mm (~10 cm), it breaks.
-while True:
-    dist_mm = distance_sensor.distance(port.D)  # returns millimeters
-    if dist_mm is not None and dist_mm < 100:
-        break
+    # Wait until within 100 mm (~10 cm)
+    while True:
+        dist_mm = distance_sensor.distance(port.D)  # millimeters (or None)
+        if dist_mm is not None and dist_mm < 100:
+            break
+        await runloop.sleep_ms(20)
 
-motor_pair.stop(motor_pair.PAIR_1)
-light_matrix.show_image(light_matrix.IMAGE_HEART)
-await sound.beep(523, 200)` },
+    motor_pair.stop(motor_pair.PAIR_1)
+    light_matrix.show_image(light_matrix.IMAGE_HEART)
+    await sound.beep(523, 200)
+
+runloop.run(main())` },
                             { title: 'Simple Maze Solver', code: `from hub import motion_sensor, port
 import motor_pair, distance_sensor
 
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
 def turn_right_90():
-    motion_sensor.reset_yaw_angle()
+    motion_sensor.reset_yaw()
     motor_pair.move_for_degrees(motor_pair.PAIR_1, 575, 100, velocity=300)
 
 def turn_left_90():
-    motion_sensor.reset_yaw_angle()
+    motion_sensor.reset_yaw()
     motor_pair.move_for_degrees(motor_pair.PAIR_1, 575, -100, velocity=300)
 
 while True:
-    motor_pair.move_for_degrees(motor_pair.PAIR_1, (10 / 17.5) * 360, 0, velocity=300)
+    motor_pair.move_for_degrees(motor_pair.PAIR_1, int((10 / 17.5) * 360), 0, velocity=300)
     turn_right_90()
     distance_mm = distance_sensor.distance(port.D)
     if distance_mm is None or distance_mm > 200:
@@ -366,17 +384,28 @@ while True:
             continue
         else:
             turn_left_90()` },
+                            { title: 'Bumper Stop (New)', code: `from hub import port
+import motor_pair, force_sensor
+
+motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
+motor_pair.move_tank(motor_pair.PAIR_1, 40, 40)
+
+# Stop as soon as the bumper is pressed
+while True:
+    if force_sensor.pressed(port.E):
+        motor_pair.stop(motor_pair.PAIR_1)
+        print("Bumper pressed — stopped.")
+        break` },
                         ],
                         explore: [
-                            { func: 'force_sensor.get_force()', desc: 'Measures the force of a press in Newtons.', example: `from hub import port
+                            { func: 'force_sensor.get_force()', desc: 'Force in Newtons.', example: `from hub import port
 import force_sensor
-force_N = force_sensor.get_force(port.E)
-if force_N > 5:
+if force_sensor.get_force(port.E) > 5:
     print("Ouch!")`},
-                            { func: 'distance_sensor.distance()', desc: 'Gets the distance in millimeters (mm).', example: `from hub import port
+                            { func: 'distance_sensor.distance()', desc: 'Returns mm (or None).', example: `from hub import port
 import distance_sensor, motor_pair
-dist_mm = distance_sensor.distance(port.D)
-if dist_mm is not None and dist_mm < 100:
+mm = distance_sensor.distance(port.D)
+if mm is not None and mm < 100:
     motor_pair.stop(motor_pair.PAIR_1)`}
                         ]
                     },
@@ -396,15 +425,12 @@ motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 async def drive_forward():
     motor_pair.move(motor_pair.PAIR_1, 0, velocity=400)
 
-# This is a second, parallel task.
+# Second, parallel task: stop when obstacle detected
 async def scan_for_obstacles():
     while True:
-        # 'await' pauses this task until the condition is met,
-        # allowing other tasks (like drive_forward) to run.
-        await runloop.until(lambda: distance_sensor.distance(port.D) is not None and distance_sensor.distance(port.D) < 150)
+        await runloop.until(lambda: (d := distance_sensor.distance(port.D)) is not None and d < 150)
         motor_pair.stop(motor_pair.PAIR_1)
 
-# runloop.run() starts all the tasks at the same time.
 runloop.run(drive_forward(), scan_for_obstacles())` },
                             { title: 'The Interruptible Delivery', code: `from hub import port
 import motor_pair, motor, color_sensor, force_sensor, runloop
@@ -412,20 +438,17 @@ import motor_pair, motor, color_sensor, force_sensor, runloop
 motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
 async def follow_line_mission():
-    TARGET_LIGHT = 50
+    TARGET = 50
     GAIN = 1.5
     while True:
-        error = color_sensor.reflection(port.C) - TARGET_LIGHT
-        steering = error * GAIN
-        motor_pair.move_tank(motor_pair.PAIR_1, 30 + steering, 30 - steering)
-        # This await is critical! It lets other tasks run.
+        err = color_sensor.reflection(port.C) - TARGET
+        steer = err * GAIN
+        motor_pair.move_tank(motor_pair.PAIR_1, 30 + steer, 30 - steer)
         await runloop.sleep_ms(20)
 
 async def watch_for_delivery():
     while True:
-        # Wait for the force sensor button to be pressed.
         await runloop.until(lambda: force_sensor.pressed(port.E))
-        # When pressed, it interrupts the other task.
         motor_pair.stop(motor_pair.PAIR_1)
         await motor.run_for_degrees(port.F, 360, 500)
         await runloop.sleep_ms(1000)
@@ -433,18 +456,15 @@ async def watch_for_delivery():
 runloop.run(follow_line_mission(), watch_for_delivery())` },
                         ],
                         explore: [
-                            { func: 'button.pressed(button.LEFT)', desc: 'Checks if the hub\'s left button is currently pressed (use with `runloop.until`).', example: `from hub import button
+                            { func: 'button.pressed(button.LEFT)', desc: 'Check hub button state (use with runloop.until).', example: `from hub import button
 import runloop
 async def wait_for_start():
     await runloop.until(lambda: button.pressed(button.LEFT))
     # ... start mission ...`},
-                            { func: 'runloop.run(task1, task2)', desc: 'You can run multiple tasks. The robot can drive, watch a sensor, and blink its lights all at once!', example: `import runloop
-async def blink():
-    #...
-async def drive():
-    #...
-async def watch():
-    #...
+                            { func: 'runloop.run(task1, task2)', desc: 'Run multiple tasks concurrently.', example: `import runloop
+async def blink(): ...
+async def drive(): ...
+async def watch(): ...
 runloop.run(blink(), drive(), watch())` }
                         ]
                     },
@@ -461,12 +481,12 @@ import runloop
 # Define each mission as its own async function.
 async def mission_one():
     light_matrix.write("M1")
-    # ... code for mission 1 ...
+    # ... mission 1 code ...
     print("Mission 1 Complete!")
 
 async def mission_two():
     light_matrix.write("M2")
-    # ... code for mission 2 ...
+    # ... mission 2 code ...
     print("Mission 2 Complete!")
 
 # This main task acts as a menu.
@@ -474,13 +494,13 @@ async def select_mission():
     light_matrix.write("?")
     while True:
         # Wait for the left button to be pressed.
-        pressed = await runloop.until(lambda: button.pressed(button.LEFT))
-        if pressed:
-            print("Starting Mission 1")
-            # 'await' runs the mission and waits for it to finish.
-            await mission_one()
-            light_matrix.write("?") # Show menu again
-        await runloop.sleep_ms(20)` },
+        await runloop.until(lambda: button.pressed(button.LEFT))
+        print("Starting Mission 1")
+        await mission_one()
+        light_matrix.write("?")  # Show menu again
+        await runloop.sleep_ms(20)
+
+runloop.run(select_mission())` },
                             { title: 'Full Mission Example', code: `from hub import light_matrix, motion_sensor, port
 import motor_pair, motor, color_sensor, distance_sensor, runloop
 
@@ -488,23 +508,24 @@ motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)
 
 async def line_to_wall_push_mission():
     print("Starting Mission!")
-    motion_sensor.reset_yaw_angle()
+    motion_sensor.reset_yaw()
     
-    TARGET_LIGHT = 50
+    TARGET = 50
     GAIN = 1.5
     while True:
-        dist_mm = distance_sensor.distance(port.D)
-        if dist_mm is not None and dist_mm < 150:
+        dist = distance_sensor.distance(port.D)
+        if dist is not None and dist < 150:
             break
-        error = color_sensor.reflection(port.C) - TARGET_LIGHT
-        steering = error * GAIN
-        motor_pair.move_tank(motor_pair.PAIR_1, 30 + steering, 30 - steering)
+        err = color_sensor.reflection(port.C) - TARGET
+        steer = err * GAIN
+        motor_pair.move_tank(motor_pair.PAIR_1, 30 + steer, 30 - steer)
         await runloop.sleep_ms(20)
         
     motor_pair.stop(motor_pair.PAIR_1)
     print("Wall detected!")
     
-    await motor_pair.move_for_degrees(motor_pair.PAIR_1, (10 / 17.5) * 360, 0, velocity=300)
+    # Advance 10 cm, then actuate an attachment on port F.
+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, int((10 / 17.5) * 360), 0, velocity=300)
     await motor.run_for_degrees(port.F, 540, 600)
     await motor.run_for_degrees(port.F, 540, -600)
     
@@ -514,12 +535,11 @@ async def line_to_wall_push_mission():
 runloop.run(line_to_wall_push_mission())` },
                         ],
                         explore: [
-                            { func: 'print()', desc: 'Prints messages to the console. This is the most important tool for debugging your missions!', example: `from hub import motion_sensor
+                            { func: 'print()', desc: 'Console logging for debugging.', example: `from hub import motion_sensor
 print("Starting mission 1...")
-# ... code ...
-print("Gyro angle is:", motion_sensor.get_yaw_angle())`},
-                            { func: 'try...except', desc: 'A way to handle errors gracefully without crashing your program.', example: `try:
-    # code that might fail
+print("Gyro angle is:", -0.1 * motion_sensor.tilt_angles()[0])`},
+                            { func: 'try...except', desc: 'Handle errors without crashing.', example: `try:
+    # risky code
     result = 10 / 0
 except Exception as e:
     print("An error occurred:", e)`}
@@ -527,41 +547,32 @@ except Exception as e:
                     },
                 ],
                 cheatsheet: [
-                    { category: 'Setup', command: 'from hub import port, light_matrix, sound, motion_sensor, button', desc: 'Imports modules from the hub (light_matrix, sound, motion_sensor, button, ports).' },
-                    { category: 'Setup', command: 'import motor, motor_pair, color_sensor, distance_sensor, force_sensor, color', desc: 'Imports motor and sensor modules.' },
-                    { category: 'Setup', command: 'import runloop', desc: 'Async task control (sleep, until, run multiple tasks).' },
-                    { category: 'Setup', command: 'motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)', desc: 'Links two motors together into PAIR_1.' },
-                    { category: 'Speaker', command: 'await sound.beep(523, 200)', desc: 'Plays a single tone (Hz, ms).' },
-                    { category: 'Speaker', command: "await app.sound.play('Cat Miaow 1')", desc: 'Plays a built-in sound file from the App library.' },
-                    { category: 'Light Matrix', command: "light_matrix.write('Hi!')", desc: 'Displays scrolling text.' },
-                    { category: 'Light Matrix', command: 'light_matrix.show_image(light_matrix.IMAGE_HEART)', desc: 'Shows a pre-made image.' },
-                    { category: 'Light Matrix', command: 'light_matrix.set_pixel(x, y, brightness=100)', desc: 'Lights up one pixel (x,y from 0-4).' },
-                    { category: 'Light Matrix', command: 'light_matrix.off()', desc: 'Turns all pixels off.' },
-                    { category: 'Control', command: 'await runloop.sleep_ms(1500)', desc: 'Pauses the task for a number of milliseconds.' },
-                    { category: 'Control', command: 'for i in range(5):', desc: 'Repeats the code inside 5 times.' },
-                    { category: 'Control', command: 'while True:', desc: 'Repeats the code inside forever (or until `break`).' },
-                    { category: 'Motors', command: 'await motor.run_for_degrees(port.A, 360, 500)', desc: 'Runs a single motor 360° at 500 °/s.' },
-                    { category: 'Motors', command: 'await motor.run_for_time(port.A, 2000, 500)', desc: 'Runs a motor for a time in ms at velocity (°/s).' },
-                    { category: 'Motors', command: "await motor_pair.move_for_degrees(motor_pair.PAIR_1, 206, 0, velocity=300)", desc: 'Move a paired drive base a set distance (degrees calc example shown).' },
-                    { category: 'Motors', command: 'motor_pair.move(motor_pair.PAIR_1, 0, velocity=400)', desc: 'Start/continue moving straight at velocity (°/s).' },
-                    { category: 'Motors', command: 'motor_pair.stop(motor_pair.PAIR_1)', desc: 'Stops a motor pair.' },
-                    { category: 'Motors', command: 'motor_pair.move_tank(motor_pair.PAIR_1, left, right)', desc: 'Tank control with left/right velocities.' },
-                    { category: 'Color Sensor', command: 'color_sensor.color(port.C)', desc: 'Returns the detected color (e.g., color.BLUE).' },
-                    { category: 'Color Sensor', command: 'color_sensor.reflection(port.C)', desc: 'Returns reflected light (0=dark, 100=bright).' },
-                    { category: 'Color Sensor', command: 'color_sensor.get_rgb(port.C)', desc: 'Returns the Red, Green, and Blue light values.' },
-                    { category: 'Distance Sensor', command: 'distance_sensor.distance(port.D)', desc: 'Returns distance in millimeters (or None).' },
-                    { category: 'Force Sensor', command: 'force_sensor.pressed(port.E)', desc: 'Returns True if the sensor is pressed.' },
-                    { category: 'Force Sensor', command: 'force_sensor.get_force(port.E)', desc: 'Measures the force of a press in Newtons.' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.reset_yaw_angle()', desc: 'Resets the robot\'s "forward" direction to 0.' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.get_yaw_angle()', desc: 'Gets current rotation angle in degrees (-180 to 180).' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.get_pitch_angle()', desc: 'Gets the up/down tilt angle.' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.get_roll_angle()', desc: 'Gets the side-to-side tilt angle.' },
-                    { category: 'Buttons', command: 'button.pressed(button.LEFT)', desc: 'Checks if the Left hub button is pressed.' },
-                    { category: 'Buttons', command: 'await runloop.until(lambda: button.pressed(button.RIGHT))', desc: 'Waits for the Right button to be pressed (async).' },
-                    { category: 'Async Tasks', command: 'async def my_task(): ...', desc: 'Defines a function that can run concurrently.' },
-                    { category: 'Async Tasks', command: 'await runloop.sleep_ms(20)', desc: 'Pauses the task to let others run. Essential in loops.' },
-                    { category: 'Async Tasks', command: 'await runloop.until(condition)', desc: 'Waits for a condition function to be true.' },
-                    { category: 'Async Tasks', command: 'runloop.run(task1(), task2())', desc: 'Starts and runs multiple `async` tasks.' },
+                    { category: 'Setup', command: 'from hub import port, light_matrix, sound, motion_sensor, button', desc: 'Hub modules (ports, matrix, sound, IMU, buttons).' },
+                    { category: 'Setup', command: 'import motor, motor_pair, color_sensor, distance_sensor, force_sensor, color', desc: 'Motors and sensors.' },
+                    { category: 'Setup', command: 'import runloop', desc: 'Async control (sleep, until, run tasks).' },
+                    { category: 'Setup', command: 'motor_pair.pair(motor_pair.PAIR_1, port.A, port.B)', desc: 'Create a reusable drive pair.' },
+                    { category: 'Speaker', command: 'await sound.beep(523, 200)', desc: 'Beep: frequency (Hz), duration (ms).' },
+                    { category: 'Light Matrix', command: "light_matrix.write('Hi!')", desc: 'Scroll text.' },
+                    { category: 'Light Matrix', command: 'light_matrix.show_image(light_matrix.IMAGE_HEART)', desc: 'Show built-in image.' },
+                    { category: 'Light Matrix', command: 'light_matrix.set_pixel(x, y, brightness=100)', desc: 'Set pixel 0–4, brightness 0–100.' },
+                    { category: 'Light Matrix', command: 'light_matrix.off()', desc: 'Turn all pixels off.' },
+                    { category: 'Control', command: 'await runloop.sleep_ms(1500)', desc: 'Pause current task (ms).' },
+                    { category: 'Control', command: 'await runloop.until(condition)', desc: 'Wait until condition() returns True.' },
+                    { category: 'Motors', command: 'await motor.run_for_degrees(port.A, 360, 500)', desc: 'Spin A by 360° @ 500 °/s.' },
+                    { category: 'Motors', command: 'motor_pair.move(motor_pair.PAIR_1, 0, velocity=400)', desc: 'Drive straight continuously.' },
+                    { category: 'Motors', command: 'await motor_pair.move_for_degrees(motor_pair.PAIR_1, 206, 0, velocity=300)', desc: 'Drive a set distance (example degrees).' },
+                    { category: 'Motors', command: 'motor_pair.move_tank(motor_pair.PAIR_1, left, right)', desc: 'Tank control velocities.' },
+                    { category: 'Motors', command: 'motor_pair.stop(motor_pair.PAIR_1)', desc: 'Stop the pair.' },
+                    { category: 'Color Sensor', command: 'color_sensor.color(port.C)', desc: 'Detected color enum (e.g., color.BLUE).' },
+                    { category: 'Color Sensor', command: 'color_sensor.reflection(port.C)', desc: 'Reflected light 0–100.' },
+                    { category: 'Color Sensor', command: 'color_sensor.get_rgb(port.C)', desc: 'Raw R, G, B values.' },
+                    { category: 'Distance Sensor', command: 'distance_sensor.distance(port.D)', desc: 'Distance in millimeters (or None).' },
+                    { category: 'Force Sensor', command: 'force_sensor.pressed(port.E)', desc: 'True if pressed.' },
+                    { category: 'Force Sensor', command: 'force_sensor.get_force(port.E)', desc: 'Force in Newtons.' },
+                    { category: 'Gyro Sensor', command: 'motion_sensor.reset_yaw()', desc: 'Zero the yaw.' },
+                    { category: 'Gyro Sensor', command: 'motion_sensor.tilt_angles()', desc: 'Returns (yaw, pitch, roll). Use -0.1*yaw for degrees.' },
+                    { category: 'Buttons', command: 'button.pressed(button.LEFT)', desc: 'Check hub button state.' },
+                    { category: 'Async Tasks', command: 'runloop.run(task1(), task2())', desc: 'Start multiple async tasks.' },
                 ]
             },
 
@@ -810,7 +821,7 @@ except Exception as e:
                         <div id="curriculum-view">
                             <div class="text-center">
                                 <h2 class="text-3xl font-bold text-[#3D405B]">6-Class Curriculum</h2>
-                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">Follow this iterative guide to go from beginner to challenge-ready. Select a class to view its goals and exercises. For more details, refer to the <a href="https://spike.legoeducation.com/prime/help/lls-help-python#lls-help-python-spm" target="_blank" rel="noopener noreferrer" class="text-[#D1523E] hover:underline">official documentation</a>.</p>
+                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">Follow this iterative guide to go from beginner to challenge-ready. Select a class to view its goals and exercises. For more details, refer to the <a href="https://spike.legoeducation.com/essential/help/lls-help-python" target="_blank" rel="noopener noreferrer" class="text-[#D1523E] hover:underline">official documentation</a>.</p>
                             </div>
                             <div class="flex flex-wrap justify-center gap-2 my-8">
                                 ${App.data.curriculum.map(c => `
@@ -837,7 +848,7 @@ except Exception as e:
                         <div id="cheatsheet-view">
                             <div class="text-center">
                                 <h2 class="text-3xl font-bold text-[#3D405B]">Cheat Sheet</h2>
-                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">A quick reference for all the essential Spike Prime Python commands. This is a summary; for complete details, always check the <a href="https://spike.legoeducation.com/prime/help/lls-help-python#lls-help-python-spm" target="_blank" rel="noopener noreferrer" class="text-[#D1523E] hover:underline">official documentation</a>.</p>
+                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">A quick reference for all the essential Spike Prime Python commands. This is a summary; for complete details, always check the <a href="https://spike.legoeducation.com/essential/help/lls-help-python" target="_blank" rel="noopener noreferrer" class="text-[#D1523E] hover:underline">official documentation</a>.</p>
                             </div>
                             <div class="my-8 max-w-lg mx-auto">
                                 <input type="text" id="cheatsheet-search" placeholder="🔎 Search commands (e.g., 'gyro', 'move', 'async')..." class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D1523E]">
