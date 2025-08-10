@@ -1,513 +1,185 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Spike Prime Python Guide</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Educational Harmony -->
-    <!-- Application Structure Plan: The application is structured as a Single Page Application (SPA) with three main, dynamically loaded sections: "Introduction," "Curriculum," and "Cheat Sheet," managed by a top navigation bar. This structure was chosen to deconstruct the linear report into a more user-friendly, task-oriented experience. The "Introduction" uses a card-based layout for easy exploration of core concepts. The "Curriculum" uses a tabbed interface, allowing users to focus on one class at a time without overwhelming them. The "Cheat Sheet" is an interactive, searchable reference tool. This non-linear structure enhances usability by allowing users to jump to the content most relevant to them, whether they are a new learner, studying a specific class, or looking up a command. -->
-    <!-- Visualization & Content Choices: 
-        - Report Info: Curriculum Structure (6 Classes) -> Goal: Show learning progression -> Viz/Method: Bar Chart (Chart.js) -> Interaction: Chart updates when a new class tab is selected -> Justification: Provides visual feedback and context for the user's position within the curriculum.
-        - Report Info: Robot Parts & Python Concepts -> Goal: Inform & Organize -> Viz/Method: Card-based layout with icons (HTML/CSS/Unicode) -> Interaction: Hover effects for engagement -> Justification: Breaks down dense introductory text into digestible, visually appealing chunks.
-        - Report Info: Code Snippets -> Goal: Enable easy use -> Viz/Method: Styled `pre` blocks -> Interaction: "Copy Code" button for each snippet -> Justification: Improves practical usability for students wanting to try the code.
-        - Report Info: Cheat Sheet Table -> Goal: Quick reference -> Viz/Method: Searchable table/grid (HTML/JS) -> Interaction: Live search filter -> Justification: Transforms a static table into a powerful, efficient reference tool.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #F8F7F4; color: #3D405B; }
-        .nav-active { color: #D1523E; border-bottom: 2px solid #D1523E; }
-        .nav-link { color: #82869E; border-bottom: 2px solid transparent; transition: all 0.3s ease; }
-        .nav-link:hover { color: #3D405B; }
-        .card { background-color: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 0.75rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
-        .tab-active { background-color: #D1523E; color: #FFFFFF; }
-        .tab-inactive { background-color: #FFFFFF; color: #3D405B; border: 1px solid #E0E0E0; }
-        .code-block { background-color: #2D3748; color: #EDF2F7; border-radius: 0.5rem; padding: 1rem; position: relative; font-family: monospace; }
-        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #4A5568; color: #EDF2F7; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; cursor: pointer; }
-        .copy-btn:hover { background-color: #718096; }
-        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
-        @media (min-width: 768px) { .chart-container { height: 350px; } }
-    </style>
-</head>
-<body class="antialiased">
-
-    <div id="app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Header -->
-        <header class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl font-bold text-[#D1523E]">Spike Prime Python</h1>
-            <p class="text-lg text-gray-600 mt-2">The Ultimate Interactive Challenge Guide</p>
-        </header>
-
-        <!-- Navigation -->
-        <nav class="flex justify-center border-b border-gray-200 mb-8">
-            <button data-target="introduction" class="nav-link nav-active py-4 px-6 text-lg font-medium">Introduction</button>
-            <button data-target="curriculum" class="nav-link py-4 px-6 text-lg font-medium">Curriculum</button>
-            <button data-target="cheatsheet" class="nav-link py-4 px-6 text-lg font-medium">Cheat Sheet</button>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main id="main-content">
-            <!-- Content will be injected here by JavaScript -->
-        </main>
-    </div>
-
-    <script>
-        const App = {
-            state: {
-                activeView: 'introduction',
-                activeClass: 1,
-            },
-            
-            data: {
-                introduction: {
-                    parts: [
-                        { name: 'The Hub', icon: '🧠', desc: 'The brain of your robot. It has a battery, light matrix, speaker, buttons, and a built-in Gyro Sensor. All other parts plug into its six ports (A-F).' },
-                        { name: 'Motors', icon: '⚙️', desc: 'The muscles of your robot. They make things move and have built-in rotation sensors for precise control.' },
-                        { name: 'Color Sensor', icon: '🎨', desc: 'One of the robot\'s eyes. It can detect colors and measure reflected light intensity, perfect for following lines.' },
-                        { name: 'Distance Sensor', icon: '🌊', desc: 'Uses ultrasound to measure distance to objects. It\'s like the robot\'s sonar, helping it see walls without touching them.' },
-                        { name: 'Force Sensor', icon: '👆', desc: 'The robot\'s sense of touch. A button that detects presses, making it perfect for bumpers.' },
-                        { name: 'Gyro Sensor', icon: '🧭', desc: 'Built into the Hub, it measures rotation. It is the key to making precise turns and driving perfectly straight.' },
-                    ],
-                    concepts: [
-                        { name: '`import` Statements', desc: 'Brings libraries of code into your program so you can use special Spike Prime commands.' },
-                        { name: 'Variables', desc: 'A container with a name that holds information, making your code cleaner and easier to change.' },
-                        { name: 'Functions', desc: 'A named, reusable block of code that performs a specific task. The secret to organized programming!' },
-                        { name: 'Loops (`for`/`while`)', desc: 'Repeat blocks of code. `for` loops repeat a set number of times; `while` loops repeat as long as a condition is true.' },
-                        { name: 'Conditionals (`if`/`else`)', desc: 'Allow your robot to make decisions by checking if a condition is true and running code accordingly.' },
-                        { name: 'Asynchronous Tasks', desc: 'An advanced but essential concept using `async` and `await` that allows your robot to do multiple things at once.' },
-                    ]
-                },
-                curriculum: [
-                    // Class 1
-                    {
-                        id: 1,
-                        title: 'Bringing Your Robot to Life',
-                        goal: 'Learn the absolute basics: making the robot move, light up, and make sounds. We\'ll also learn about variables to store information.',
-                        concepts: ['Motors', 'Lights', 'Sounds', 'Variables'],
-                        exercises: [
-                            { title: 'First Moves (The Basics)', code: `from hub import light_matrix, sound\nimport motor\nimport time\n\n# Show a built-in image on the 5x5 light matrix.\nlight_matrix.show_image('HAPPY')\n# Pause the program for 1 second.\ntime.sleep(1)\n\n# Tell the console what we are doing.\nprint("Moving forward!")\n# Run the motor on Port A forward for 1 full rotation.\nmotor.run_for_rotations(motor.A, 1)\ntime.sleep(1)\n\nprint("Moving backward!")\n# A negative number makes the motor run in reverse.\nmotor.run_for_rotations(motor.A, -1)\n\n# Turn all the lights off.\nlight_matrix.off()` },
-                            { title: 'Wake-Up Routine with Variables', code: `from hub import light_matrix, sound\nimport motor_pair\nimport motor\nimport time\n\n# Initialize a pair for motors in Port A and B.\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\n# --- Variables --- \n# Variables store information with a name.\nwakeup_sound_note = 60 # MIDI note for the sound (C4).\nready_sound_note = 72  # MIDI note for a higher sound (C5).\ncircle_distance_cm = 15 # The distance in cm.\n\n# Beep with the note stored in our variable.\nsound.beep(wakeup_sound_note)\nlight_matrix.show_image('ASLEEP')\ntime.sleep(1)\n\nlight_matrix.show_image('HAPPY')\nsound.beep(ready_sound_note)\n\n# Move in a circle using our distance variable.\n# Steering = 100 makes a sharp right turn.\nmotor_pair.move(motor_pair.PAIR_1, circle_distance_cm, unit='cm', steering=100)` },
-                            { title: 'Custom Light Show', code: `from hub import light_matrix\nimport time\n\n# set_pixel lights up one LED at (x, y) with a brightness (0-100).\n# X is horizontal (0-4), Y is vertical (0-4).\n\n# Let's draw a simple 'X'\nlight_matrix.set_pixel(0, 0, brightness=100)\nlight_matrix.set_pixel(4, 0, brightness=100)\nlight_matrix.set_pixel(1, 1, brightness=100)\nlight_matrix.set_pixel(3, 1, brightness=100)\nlight_matrix.set_pixel(2, 2, brightness=100)\nlight_matrix.set_pixel(1, 3, brightness=100)\nlight_matrix.set_pixel(3, 3, brightness=100)\nlight_matrix.set_pixel(0, 4, brightness=100)\nlight_matrix.set_pixel(4, 4, brightness=100)\n\ntime.sleep(3)\nlight_matrix.off()` },
-                        ],
-                        explore: [
-                            { func: 'sound.play()', desc: 'Plays a built-in sound file from the hub.', example: `# Plays a cat sound.\nsound.play('Cat Miaow 1')`},
-                            { func: 'motor_pair.move_tank()', desc: 'Controls the speed of each motor individually for custom turns.', example: `# This makes the robot curve to the right.\nmotor_pair.move_tank(motor_pair.PAIR_1, 1, unit='rotations', left_speed=75, right_speed=25)`}
-                        ]
-                    },
-                    // Class 2
-                    {
-                        id: 2,
-                        title: 'Functions and Precision Movement',
-                        goal: 'Learn how to make precise turns and organize our code into reusable blocks called functions. We\'ll also meet the Gyro Sensor!',
-                        concepts: ['Functions', 'Gyro Sensor'],
-                        exercises: [
-                            { title: 'The Perfect 90-Degree Turn (Gyro)', code: `from hub import motion_sensor\nimport motor_pair\nimport motor\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\n# reset_yaw_angle sets the robot's current direction to 0.\n# This is CRITICAL for accurate turns.\nmotion_sensor.reset_yaw_angle()\n\nprint("Turning right...")\n# Start turning at a moderate speed.\nmotor_pair.start_tank(motor_pair.PAIR_1, 50, -50)\n\n# A 'while' loop repeats as long as the condition is true.\n# We wait here until the angle is >= 90.\nwhile motion_sensor.get_yaw_angle() < 90:\n    pass # 'pass' means do nothing, just wait.\n\n# As soon as the loop finishes, stop the motors.\nmotor_pair.stop(motor_pair.PAIR_1)\nprint("Turn complete!")` },
-                            { title: 'Creating Reusable Functions', code: `from hub import motion_sensor\nimport motor_pair\nimport motor\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\n# 'def' defines a function. This code can be reused.\ndef move_straight(distance_cm):\n    print("Moving straight for", distance_cm, "cm")\n    motion_sensor.reset_yaw_angle()\n    # The move command automatically uses the gyro to stay straight.\n    motor_pair.move(motor_pair.PAIR_1, distance_cm, unit='cm')\n\ndef turn_right_90():\n    print("Turning right 90 degrees")\n    motion_sensor.reset_yaw_angle()\n    # Turning by a specific number of motor degrees is an alternative to a while loop.\n    # You may need to tune the '575' value for your robot.\n    motor_pair.move(motor_pair.PAIR_1, 575, unit='degrees', steering=100)\n\n# A 'for' loop repeats the code inside a set number of times.\nfor i in range(4):\n    # Call our functions to draw a square.\n    move_straight(20)\n    turn_right_90()` },
-                            { title: 'Driving Straight with Gyro Correction', code: `from hub import motion_sensor\nimport motor_pair\nimport motor\nimport time\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\n# This move relies only on the motors running at the same speed.\nprint("Moving without gyro (using start_tank)...")\nmotor_pair.start_tank(motor_pair.PAIR_1, 50, 50)\ntime.sleep(2)\nmotor_pair.stop(motor_pair.PAIR_1)\ntime.sleep(2)\n\n# This move uses the gyro to actively correct any deviation.\nprint("Moving WITH gyro (using move)...")\nmotion_sensor.reset_yaw_angle()\nmotor_pair.move(motor_pair.PAIR_1, 50, unit='cm')` },
-                        ],
-                        explore: [
-                            { func: 'motion_sensor.get_pitch_angle()', desc: 'Gets the up/down tilt of the Hub. Useful for detecting ramps or if the robot has fallen over.', example: `pitch = motion_sensor.get_pitch_angle()\nprint("Current tilt:", pitch)`},
-                            { func: 'motor.get_position()', desc: 'Gets the motor\'s rotation in degrees relative to when the program started.', example: `position = motor.get_position(motor.A)\nprint("Motor has turned", position, "degrees.")`}
-                        ]
-                    },
-                    // Class 3
-                    {
-                        id: 3,
-                        title: 'Following Lines with the Color Sensor',
-                        goal: 'Use the Color Sensor to follow a black line on a white surface using a concept called Proportional Control.',
-                        concepts: ['Color Sensor', 'Proportional Control'],
-                        exercises: [
-                            { title: 'Finding the Edge', code: `from hub import light_matrix, sound\nimport color_sensor\nimport port\nimport time\n\n# get_reflected_light() returns a value from 0 (dark) to 100 (bright).\nlight_matrix.write('W')\ntime.sleep(3)\nwhite_light = color_sensor.get_reflected_light(port.C)\nprint("White light value:", white_light)\nsound.beep()\n\nlight_matrix.write('B')\ntime.sleep(3)\nblack_light = color_sensor.get_reflected_light(port.C)\nprint("Black light value:", black_light)\nsound.beep()\n\n# The ideal target for the edge of a line is halfway between the two values.\ntarget_light = (white_light + black_light) / 2\nprint("Calculated Target Light:", target_light)` },
-                            { title: 'The Smooth Proportional Line Follower', code: `import motor_pair\nimport motor\nimport color_sensor\nimport port\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\n# Constants are variables that don't change. We use ALL_CAPS.\nTARGET_LIGHT = 50\nSPEED = 30\n# GAIN is a multiplier. Higher gain = sharper turns.\nGAIN = 1.5\n\nwhile True:\n    # 1. Calculate the 'error' - how far are we from the target?\n    # Positive error = too bright (on white), Negative = too dark (on black)\n    error = color_sensor.get_reflected_light(port.C) - TARGET_LIGHT\n\n    # 2. Calculate the steering value by multiplying error by gain.\n    steering = error * GAIN\n\n    # 3. Apply the correction using start_tank for smooth, direct control.\n    motor_pair.start_tank(motor_pair.PAIR_1, SPEED + steering, SPEED - steering)` },
-                        ],
-                        explore: [
-                            { func: 'color_sensor.get_rgb()', desc: 'Gets the intensity of Red, Green, and Blue light separately.', example: `r, g, b = color_sensor.get_rgb(port.C)\nprint("Red:", r)`},
-                            { func: 'import color', desc: 'The API provides named constants for colors.', example: `import color\nif color_sensor.get_color(port.C) is color.BLUE:\n    print("I see blue!")`}
-                        ]
-                    },
-                    // Class 4
-                    {
-                        id: 4,
-                        title: 'Physical Interaction & Navigation',
-                        goal: 'Use the Force and Distance sensors to interact with the world. We\'ll also use the Gyro to navigate a simple maze.',
-                        concepts: ['Force Sensor', 'Distance Sensor', 'Maze Logic'],
-                        exercises: [
-                            { title: 'Wall Detector', code: `from hub import light_matrix, sound\nimport motor_pair\nimport motor\nimport distance_sensor\nimport port\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\nmotor_pair.start(motor_pair.PAIR_1, speed=30)\n\n# This loop waits for the condition to be met.\n# It checks the distance, and if it's valid and less than 10, it breaks.\nwhile True:\n    dist_cm = distance_sensor.get_distance(port.D)\n    if dist_cm is not None and dist_cm < 10:\n        break\n\nmotor_pair.stop(motor_pair.PAIR_1)\nlight_matrix.show_image('HAPPY')\nsound.beep()` },
-                            { title: 'Simple Maze Solver', code: `from hub import motion_sensor\nimport motor_pair\nimport motor\nimport distance_sensor\nimport port\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\ndef turn_right_90():\n    motion_sensor.reset_yaw_angle()\n    motor_pair.move(motor_pair.PAIR_1, 575, unit='degrees', steering=100)\n\ndef turn_left_90():\n    motion_sensor.reset_yaw_angle()\n    motor_pair.move(motor_pair.PAIR_1, 575, unit='degrees', steering=-100)\n\nwhile True:\n    motor_pair.move(motor_pair.PAIR_1, 10, unit='cm')\n    turn_right_90()\n    distance = distance_sensor.get_distance(port.D)\n    if distance is None or distance > 20:\n        continue\n    else:\n        turn_left_90()\n        distance = distance_sensor.get_distance(port.D)\n        if distance is None or distance > 20:\n            continue\n        else:\n            turn_left_90()` },
-                        ],
-                        explore: [
-                            { func: 'force_sensor.get_force()', desc: 'Measures the force of a press in Newtons.', example: `force_N = force_sensor.get_force(port.E)\nif force_N > 5:\n    print("Ouch!")`},
-                            { func: 'distance_sensor.get_distance_inches()', desc: 'Gets the distance in inches instead of centimeters.', example: `dist_in = distance_sensor.get_distance_inches(port.D)\nif dist_in is not None and dist_in < 4:\n    motor_pair.stop(motor_pair.PAIR_1)`}
-                        ]
-                    },
-                    // Class 5
-                    {
-                        id: 5,
-                        title: 'Advanced Programming: Parallel Tasks',
-                        goal: 'Learn how to make the robot do multiple things at once using asyncio and runloop. This is the key to making a responsive robot.',
-                        concepts: ['Async/Await', 'Concurrency'],
-                        exercises: [
-                            { title: 'Drive and Scan', code: `import motor_pair\nimport motor\nimport distance_sensor\nimport port\nimport runloop\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\n# 'async def' defines a task that can run in parallel.\nasync def drive_forward():\n    motor_pair.start(motor_pair.PAIR_1, speed=40)\n\n# This is a second, parallel task.\nasync def scan_for_obstacles():\n    while True:\n        # 'await' pauses this task until the condition is met,\n        # allowing other tasks (like drive_forward) to run.\n        await runloop.until(lambda: distance_sensor.get_distance(port.D) is not None and distance_sensor.get_distance(port.D) < 15)\n        motor_pair.stop(motor_pair.PAIR_1)\n\n# runloop.run() starts all the tasks at the same time.\nrunloop.run(drive_forward(), scan_for_obstacles())` },
-                            { title: 'The Interruptible Delivery', code: `import motor_pair\nimport motor\nimport color_sensor\nimport force_sensor\nimport port\nimport runloop\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\nasync def follow_line_mission():\n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while True:\n        error = color_sensor.get_reflected_light(port.C) - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start_tank(motor_pair.PAIR_1, 30 + steering, 30 - steering)\n        # This await is critical! It lets other tasks run.\n        await runloop.sleep_ms(20)\n\nasync def watch_for_delivery():\n    while True:\n        # This task just waits for the button to be pressed.\n        await runloop.until(lambda: force_sensor.is_pressed(port.E))\n        # When pressed, it interrupts the other task.\n        motor_pair.stop(motor_pair.PAIR_1)\n        motor.run_for_rotations(motor.F, 1)\n        await runloop.sleep_ms(1000)\n\nrunloop.run(follow_line_mission(), watch_for_delivery())` },
-                        ],
-                        explore: [
-                            { func: 'button.left.is_pressed()', desc: 'Checks if the hub\'s left button is currently pressed. Must be used with `runloop.until`.', example: `from hub import button\nasync def wait_for_start():\n    await runloop.until(button.left.is_pressed)\n    # ... start mission ...`},
-                            { func: 'runloop.run(task1, task2)', desc: 'You can run multiple tasks. The robot can drive, watch a sensor, and blink its lights all at once!', example: `async def blink():\n    #...\\nasync def drive():\n    #...\\nasync def watch():\n    #...\\nrunloop.run(blink(), drive(), watch())` }
-                        ]
-                    },
-                    // Class 6
-                    {
-                        id: 6,
-                        title: 'Ultimate Challenge: Competition Structure',
-                        goal: 'Learn how to structure a program for a robotics competition. This involves creating separate, modular "mission" functions.',
-                        concepts: ['Modular Programming', 'Mission Launcher'],
-                        exercises: [
-                            { title: 'The Mission Launcher', code: `from hub import light_matrix, button\nimport runloop\n\n# Define each mission as its own async function.\nasync def mission_one():\n    light_matrix.write("M1")\n    # ... code for mission 1 ...\n    print("Mission 1 Complete!")\n\nasync def mission_two():\n    light_matrix.write("M2")\n    # ... code for mission 2 ...\n    print("Mission 2 Complete!")\n\n# This main task acts as a menu.\nasync def select_mission():\n    light_matrix.write("?")\n    while True:\n        # Wait for the left button to be pressed.\n        pressed = await runloop.until(button.left.is_pressed)\n        if pressed:\n            print("Starting Mission 1")\n            # 'await' runs the mission and waits for it to finish.\n            await mission_one()\n            light_matrix.write("?") # Show menu again\n        await runloop.sleep_ms(20)` },
-                            { title: 'Full Mission Example', code: `from hub import light_matrix, motion_sensor\nimport motor_pair\nimport motor\nimport color_sensor\nimport distance_sensor\nimport port\nimport runloop\n\nmotor_pair.pair(motor_pair.PAIR_1, motor.A, motor.B)\n\nasync def line_to_wall_push_mission():\n    print("Starting Mission!")\n    motion_sensor.reset_yaw_angle()\n    \n    TARGET_LIGHT = 50\n    GAIN = 1.5\n    while True:\n        dist = distance_sensor.get_distance(port.D)\n        if dist is not None and dist < 15:\n            break\n        error = color_sensor.get_reflected_light(port.C) - TARGET_LIGHT\n        steering = error * GAIN\n        motor_pair.start_tank(motor_pair.PAIR_1, 30 + steering, 30 - steering)\n        await runloop.sleep_ms(20)\n        \n    motor_pair.stop(motor_pair.PAIR_1)\n    print("Wall detected!")\n    \n    motor_pair.move(motor_pair.PAIR_1, 10, unit='cm')\n    motor.run_for_rotations(motor.F, 1.5)\n    motor.run_for_rotations(motor.F, -1.5)\n    \n    print("Mission Complete!")\n    light_matrix.show_image('HAPPY')\n\nrunloop.run(line_to_wall_push_mission())` },
-                        ],
-                        explore: [
-                            { func: 'print()', desc: 'Prints messages to the console. This is the most important tool for debugging your missions!', example: `print("Starting mission 1...")\\n# ... code ...\\nprint("Gyro angle is:", motion_sensor.get_yaw_angle())`},
-                            { func: 'try...except', desc: 'A way to handle errors gracefully without crashing your program.', example: `try:\\n    # code that might fail\\n    result = 10 / 0\\nexcept Exception as e:\\n    print("An error occurred:", e)`}
-                        ]
-                    },
-                ],
-                cheatsheet: [
-                    { category: 'Setup', command: 'from hub import ...', desc: 'Imports modules from the hub (light_matrix, sound, motion_sensor, button).' },
-                    { category: 'Setup', command: 'import motor, motor_pair, color_sensor, port, ...', desc: 'Imports sensor and motor modules.' },
-                    { category: 'Setup', command: 'import time, runloop', desc: 'Imports core Python modules for control flow.' },
-                    { category: 'Setup', command: 'motor_pair.pair(id, port1, port2)', desc: 'Links two motors together. id is motor_pair.PAIR_1. Ports are motor.A, etc.' },
-                    { category: 'Speaker', command: 'sound.beep(note=60, seconds=0.2)', desc: 'Plays a single note (44-1188 Hz).' },
-                    { category: 'Speaker', command: 'sound.play(\'Cat Miaow 1\')', desc: 'Plays a built-in sound file.' },
-                    { category: 'Light Matrix', command: 'light_matrix.write(\'Hi!\')', desc: 'Displays scrolling text.' },
-                    { category: 'Light Matrix', command: 'light_matrix.show_image(\'HAPPY\')', desc: 'Shows a pre-made image.' },
-                    { category: 'Light Matrix', command: 'light_matrix.set_pixel(x, y, brightness=100)', desc: 'Lights up one pixel (x,y from 0-4).' },
-                    { category: 'Light Matrix', command: 'light_matrix.off()', desc: 'Turns all pixels off.' },
-                    { category: 'Control', command: 'time.sleep(1.5)', desc: 'Pauses the program for a number of seconds.' },
-                    { category: 'Control', command: 'for i in range(5):', desc: 'Repeats the code inside 5 times.' },
-                    { category: 'Control', command: 'while True:', desc: 'Repeats the code inside forever (or until `break`).' },
-                    { category: 'Motors', command: 'motor.run_for_rotations(motor.A, 2, 75)', desc: 'Runs a single motor for 2 rotations at 75% speed.' },
-                    { category: 'Motors', command: 'motor.run_for_degrees(motor.A, 180)', desc: 'Runs a single motor for a specific number of degrees.' },
-                    { category: 'Motors', command: 'motor_pair.move(id, 15, \'cm\', speed=50)', desc: 'Moves a motor pair for a distance. Units: cm, in, rotations, degrees, seconds.' },
-                    { category: 'Motors', command: 'motor_pair.start(id, speed=50)', desc: 'Starts a motor pair moving continuously.' },
-                    { category: 'Motors', command: 'motor_pair.stop(id)', desc: 'Stops a motor pair.' },
-                    { category: 'Motors', command: 'motor_pair.move_tank(id, 1, \'r\', ls, rs)', desc: 'Moves with individual speeds for left (ls) and right (rs).' },
-                    { category: 'Motors', command: 'motor_pair.start_tank(id, ls, rs)', desc: 'Starts moving with individual left/right speeds.' },
-                    { category: 'Color Sensor', command: 'color_sensor.get_color(port.C)', desc: 'Returns the name of the detected color (e.g., color.BLUE).' },
-                    { category: 'Color Sensor', command: 'color_sensor.get_reflected_light(port.C)', desc: 'Returns light intensity (0=dark, 100=bright).' },
-                    { category: 'Color Sensor', command: 'color_sensor.get_rgb(port.C)', desc: 'Returns the Red, Green, and Blue light values.' },
-                    { category: 'Distance Sensor', command: 'distance_sensor.get_distance(port.D)', desc: 'Returns distance in cm. Can be `None`.' },
-                    { category: 'Distance Sensor', command: 'distance_sensor.get_distance_inches(port.D)', desc: 'Returns distance in inches.' },
-                    { category: 'Force Sensor', command: 'force_sensor.is_pressed(port.E)', desc: 'Returns `True` if a sensor is pressed.' },
-                    { category: 'Force Sensor', command: 'force_sensor.get_force(port.E)', desc: 'Measures the force of a press in Newtons.' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.reset_yaw_angle()', desc: 'Resets the robot\'s "forward" direction to 0.' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.get_yaw_angle()', desc: 'Gets current rotation angle in degrees (-180 to 180).' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.get_pitch_angle()', desc: 'Gets the up/down tilt angle.' },
-                    { category: 'Gyro Sensor', command: 'motion_sensor.get_roll_angle()', desc: 'Gets the side-to-side tilt angle.' },
-                    { category: 'Buttons', command: 'button.left.is_pressed()', desc: 'Returns `True` if the left hub button is pressed.' },
-                    { category: 'Buttons', command: 'await runloop.until(button.right.is_pressed)', desc: 'Waits for the right button to be pressed (in async).' },
-                    { category: 'Async Tasks', command: 'import runloop', desc: 'Imports the library for concurrent tasks.' },
-                    { category: 'Async Tasks', command: 'async def my_task():', desc: 'Defines a function that can run in parallel.' },
-                    { category: 'Async Tasks', command: 'await runloop.sleep_ms(20)', desc: 'Pauses the task to let others run. Essential in loops.' },
-                    { category: 'Async Tasks', command: 'await runloop.until(condition)', desc: 'Waits for a condition function to be true.' },
-                    { category: 'Async Tasks', command: 'runloop.run(task1(), task2())', desc: 'Starts and runs multiple `async` tasks.' },
-                ]
-            },
-
-            init() {
-                this.render();
-                this.addEventListeners();
-            },
-
-            render() {
-                const mainContent = document.getElementById('main-content');
-                if (this.state.activeView === 'introduction') {
-                    mainContent.innerHTML = this.templates.introduction();
-                } else if (this.state.activeView === 'curriculum') {
-                    mainContent.innerHTML = this.templates.curriculum();
-                    this.renderClassContent();
-                    this.renderChart();
-                } else if (this.state.activeView === 'cheatsheet') {
-                    mainContent.innerHTML = this.templates.cheatsheet();
-                    this.renderCheatSheet();
-                }
-            },
-
-            renderClassContent() {
-                const classData = this.data.curriculum.find(c => c.id === this.state.activeClass);
-                const contentEl = document.getElementById('class-content');
-                if (!classData || !contentEl) return;
-
-                let exercisesHtml = classData.exercises.map(ex => `
-                    <div class="mt-6">
-                        <h4 class="text-xl font-semibold text-[#3D405B]">${ex.title}</h4>
-                        <div class="code-block mt-2">
-                            <button class="copy-btn" onclick="App.copyCode(this)">Copy</button>
-                            <pre><code class="language-python">${ex.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
-                        </div>
-                    </div>
-                `).join('');
-
-                let exploreHtml = '';
-                if (classData.explore && classData.explore.length > 0) {
-                    exploreHtml = `
-                        <div class="mt-8 pt-6 border-t border-gray-200">
-                            <h4 class="text-2xl font-bold text-[#3D405B]">Explore More Functions</h4>
-                            ${classData.explore.map(item => `
-                                <div class="mt-4">
-                                    <p class="font-mono text-md text-pink-600">${item.func}</p>
-                                    <p class="text-gray-600 ml-2">${item.desc}</p>
-                                    <div class="code-block mt-2">
-                                        <button class="copy-btn" onclick="App.copyCode(this)">Copy</button>
-                                        <pre><code class="language-python">${item.example.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-
-                contentEl.innerHTML = `
-                    <h3 class="text-3xl font-bold text-[#D1523E]">${classData.title}</h3>
-                    <p class="mt-2 text-lg text-gray-600">${classData.goal}</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        ${classData.concepts.map(c => `<span class="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">${c}</span>`).join('')}
-                    </div>
-                    ${exercisesHtml}
-                    ${exploreHtml}
-                `;
-            },
-            
-            renderChart() {
-                const chartContainer = document.getElementById('progress-chart-container');
-                if(!chartContainer) return;
-                chartContainer.innerHTML = '<canvas id="progressChart"></canvas>';
-
-                const ctx = document.getElementById('progressChart').getContext('2d');
-                const conceptsByClass = this.data.curriculum.map(c => c.concepts.length);
-                const classLabels = this.data.curriculum.map(c => `Class ${c.id}`);
-                
-                const backgroundColors = classLabels.map((_, i) => 
-                    (i + 1) === this.state.activeClass ? 'rgba(209, 82, 62, 0.8)' : 'rgba(209, 82, 62, 0.3)'
-                );
-
-                if (this.progressChart) {
-                    this.progressChart.destroy();
-                }
-
-                this.progressChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: classLabels,
-                        datasets: [{
-                            label: 'New Concepts Introduced',
-                            data: conceptsByClass,
-                            backgroundColor: backgroundColors,
-                            borderColor: 'rgba(209, 82, 62, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    stepSize: 1
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += context.parsed.y;
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            },
-
-            renderCheatSheet(filter = '') {
-                const container = document.getElementById('cheatsheet-content');
-                if (!container) return;
-                
-                const filteredData = this.data.cheatsheet.filter(item => 
-                    item.command.toLowerCase().includes(filter.toLowerCase()) ||
-                    item.desc.toLowerCase().includes(filter.toLowerCase()) ||
-                    item.category.toLowerCase().includes(filter.toLowerCase())
-                );
-
-                const grouped = filteredData.reduce((acc, item) => {
-                    (acc[item.category] = acc[item.category] || []).push(item);
-                    return acc;
-                }, {});
-
-                if(Object.keys(grouped).length === 0) {
-                    container.innerHTML = `<p class="text-center text-gray-500 col-span-full">No commands found.</p>`;
-                    return;
-                }
-
-                container.innerHTML = Object.keys(grouped).sort().map(category => `
-                    <div class="mb-8">
-                        <h3 class="text-2xl font-bold text-[#3D405B] border-b-2 border-[#D1523E] pb-2 mb-4">${category}</h3>
-                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            ${grouped[category].map(item => `
-                                <div class="card p-4 flex flex-col">
-                                    <p class="font-mono text-sm bg-gray-100 p-2 rounded break-words"><code>${item.command}</code></p>
-                                    <p class="text-sm text-gray-600 mt-2 flex-grow">${item.desc}</p>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            addEventListeners() {
-                const navButtons = document.querySelectorAll('.nav-link');
-                navButtons.forEach(button => {
-                    button.addEventListener('click', (e) => {
-                        this.state.activeView = e.target.dataset.target;
-                        navButtons.forEach(btn => btn.classList.remove('nav-active'));
-                        e.target.classList.add('nav-active');
-                        this.render();
-                    });
-                });
-
-                document.body.addEventListener('click', (e) => {
-                    if (e.target.matches('.tab-btn')) {
-                        this.state.activeClass = parseInt(e.target.dataset.classId);
-                        document.querySelectorAll('.tab-btn').forEach(btn => {
-                            btn.classList.remove('tab-active');
-                            btn.classList.add('tab-inactive');
-                        });
-                        e.target.classList.add('tab-active');
-                        e.target.classList.remove('tab-inactive');
-                        this.renderClassContent();
-                        this.renderChart();
-                    }
-                });
-
-                document.body.addEventListener('input', (e) => {
-                    if (e.target.matches('#cheatsheet-search')) {
-                        this.renderCheatSheet(e.target.value);
-                    }
-                });
-            },
-
-            copyCode(button) {
-                const code = button.nextElementSibling.textContent;
-                const textarea = document.createElement('textarea');
-                textarea.value = code;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy';
-                }, 2000);
-            },
-
-            templates: {
-                introduction() {
-                    return `
-                        <div id="introduction-view">
-                            <section>
-                                <h2 class="text-3xl font-bold text-center mb-2 text-[#3D405B]">Meet Your Robot</h2>
-                                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">This guide will teach you to program every part of your Spike Prime kit. Here are the key components you'll be working with.</p>
-                                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    ${App.data.introduction.parts.map(part => `
-                                        <div class="card p-6 text-center">
-                                            <div class="text-5xl mb-4">${part.icon}</div>
-                                            <h3 class="text-xl font-semibold text-[#D1523E]">${part.name}</h3>
-                                            <p class="text-gray-600 mt-2">${part.desc}</p>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </section>
-                            <section class="mt-16">
-                                <h2 class="text-3xl font-bold text-center mb-2 text-[#3D405B]">Core Python Concepts</h2>
-                                <p class="text-center text-gray-600 mb-8 max-w-3xl mx-auto">Python is a powerful language. We'll focus on these key ideas to bring your robot to life and prepare you for any challenge.</p>
-                                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    ${App.data.introduction.concepts.map(concept => `
-                                        <div class="card p-6">
-                                            <h3 class="text-xl font-semibold text-[#D1523E]">${concept.name}</h3>
-                                            <p class="text-gray-600 mt-2">${concept.desc}</p>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </section>
-                        </div>
-                    `;
-                },
-                curriculum() {
-                    return `
-                        <div id="curriculum-view">
-                            <div class="text-center">
-                                <h2 class="text-3xl font-bold text-[#3D405B]">6-Class Curriculum</h2>
-                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">Follow this iterative guide to go from beginner to challenge-ready. Select a class to view its goals and exercises. For more details, refer to the <a href="https://spike.legoeducation.com/prime/help/lls-help-python#lls-help-python-spm" target="_blank" rel="noopener noreferrer" class="text-[#D1523E] hover:underline">official documentation</a>.</p>
-                            </div>
-                            <div class="flex flex-wrap justify-center gap-2 my-8">
-                                ${App.data.curriculum.map(c => `
-                                    <button data-class-id="${c.id}" class="tab-btn px-4 py-2 rounded-full font-semibold ${c.id === App.state.activeClass ? 'tab-active' : 'tab-inactive'}">
-                                        Class ${c.id}
-                                    </button>
-                                `).join('')}
-                            </div>
-                            <div class="grid lg:grid-cols-5 gap-8">
-                                <div class="lg:col-span-3 card p-6">
-                                    <div id="class-content"></div>
-                                </div>
-                                <div class="lg:col-span-2 card p-6 flex flex-col">
-                                     <h3 class="text-2xl font-bold text-[#3D405B] text-center">Concept Progress</h3>
-                                     <p class="text-center text-gray-500 text-sm mb-4">This chart shows the number of new concepts introduced in each class.</p>
-                                     <div id="progress-chart-container" class="chart-container flex-grow"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                },
-                cheatsheet() {
-                    return `
-                        <div id="cheatsheet-view">
-                            <div class="text-center">
-                                <h2 class="text-3xl font-bold text-[#3D405B]">Cheat Sheet</h2>
-                                <p class="text-gray-600 mt-2 max-w-3xl mx-auto">A quick reference for all the essential Spike Prime Python commands. This is a summary; for complete details, always check the <a href="https://spike.legoeducation.com/prime/help/lls-help-python#lls-help-python-spm" target="_blank" rel="noopener noreferrer" class="text-[#D1523E] hover:underline">official documentation</a>.</p>
-                            </div>
-                            <div class="my-8 max-w-lg mx-auto">
-                                <input type="text" id="cheatsheet-search" placeholder="🔎 Search commands (e.g., 'gyro', 'move', 'async')..." class="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D1523E]">
-                            </div>
-                            <div id="cheatsheet-content">
-                                <!-- Cheat sheet items will be injected here -->
-                            </div>
-                        </div>
-                    `;
-                }
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            App.init();
-        });
-    </script>
-
-</body>
-</html>
+*** Begin Patch
+*** Update File: index.html
+@@
+-<!doctype html>
+-<html lang="en">
+-  <head>
+-    <meta charset="utf-8">
+-    <meta name="viewport" content="width=device-width, initial-scale=1">
+-    <title>SPIKE Tutorial</title>
+-    <style>
+-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 2rem; max-width: 920px; margin: 0 auto; }
+-      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+-      pre { background:#0b0b0c; color:#e6e6e6; padding:1rem; border-radius:12px; overflow:auto; }
+-      h1,h2,h3 { line-height: 1.2; }
+-      .note { background: #fff7d6; padding: 0.75rem 1rem; border-left: 4px solid #f3cc00; border-radius: 4px; }
+-      table { border-collapse: collapse; width: 100%; }
+-      th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
+-      th { background: #f9fafb; }
+-    </style>
+-  </head>
+-  <body>
+-    <h1>SPIKE Tutorial (Legacy)</h1>
+-    <p>This page contains examples using the older <code>spike</code> module APIs.</p>
+-    <h2>Motors</h2>
+-    <pre><code>from spike import Motor
+-from spike.control import wait_for_seconds
+-
+-m = Motor('A')
+-m.run_for_degrees(360, 50)
+-wait_for_seconds(1)
+-m.stop()</code></pre>
+-    <h2>Motor Pair</h2>
+-    <pre><code>from spike import MotorPair
+-
+-drive = MotorPair('A','E')
+-drive.start(steering=0, speed=50)</code></pre>
+-    <h2>Color Sensor</h2>
+-    <pre><code>from spike import ColorSensor
+-
+-cs = ColorSensor('B')
+-print(cs.get_color())</code></pre>
+-    <h2>Distance Sensor</h2>
+-    <pre><code>from spike import DistanceSensor
+-
+-ds = DistanceSensor('F')
+-print(ds.get_distance_cm())</code></pre>
+-  </body>
+-</html>
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="utf-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1">
++    <title>LEGO Learning System (LLS) Python Tutorial</title>
++    <style>
++      :root { color-scheme: light dark; }
++      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; padding: 2rem; max-width: 980px; margin: 0 auto; }
++      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.95rem; }
++      pre { background: #0b0b0c; color: #e6e6e6; padding: 1rem; border-radius: 12px; overflow: auto; }
++      h1,h2,h3 { line-height: 1.2; }
++      .note { background: #fff7d6; padding: 0.75rem 1rem; border-left: 4px solid #f3cc00; border-radius: 4px; }
++      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
++      th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
++      th { background: #f9fafb; }
++      a { color: #2563eb; text-decoration: none; }
++      a:hover { text-decoration: underline; }
++    </style>
++  </head>
++  <body>
++    <h1>LEGO Learning System (LLS) Python Tutorial</h1>
++    <p class="note"><strong>Heads up:</strong> This guide uses the current LLS Python APIs (<code>hub</code>, <code>motor</code>, <code>motor_pair</code>, <code>runloop</code>, etc.). Older <code>spike</code> imports have been removed.</p>
++
++    <h2>Legacy → LLS quick mapping</h2>
++    <table>
++      <thead><tr><th>Legacy</th><th>LLS (current)</th><th>Notes</th></tr></thead>
++      <tbody>
++        <tr><td><code>from spike import Motor, MotorPair, ColorSensor, DistanceSensor, ForceSensor</code></td><td><code>from hub import port, light_matrix, button, sound</code><br><code>import motor, motor_pair, color_sensor, distance_sensor, force_sensor, color</code></td><td>Use enums &amp; modules per device.</td></tr>
++        <tr><td><code>from spike.control import wait_for_seconds</code></td><td><code>import runloop</code> → <code>await runloop.sleep_ms(ms)</code></td><td>All sleeps are async.</td></tr>
++        <tr><td><code>Motor('A').run_for_degrees(360, 50)</code></td><td><code>await motor.run_for_degrees(port.A, 360, 500)</code></td><td>Velocity in deg/s.</td></tr>
++        <tr><td><code>MotorPair('A','E').start(steering=0, speed=50)</code></td><td><code>motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)</code><br><code>motor_pair.move(motor_pair.PAIR_1, 0, velocity=500)</code></td><td>Use <code>PAIR_1</code> and friends.</td></tr>
++        <tr><td><code>ColorSensor('B').get_color()</code></td><td><code>color_sensor.color(port.B) is color.BLACK</code></td><td>Colors are enums.</td></tr>
++        <tr><td><code>DistanceSensor('F').get_distance_cm()</code></td><td><code>distance_sensor.distance(port.F)</code> (mm)</td><td>Millimeters, not cm.</td></tr>
++      </tbody>
++    </table>
++
++    <h2>Program structure</h2>
++    <p>Wrap your script in <code>async def main()</code> and start it with <code>runloop.run(main())</code>.</p>
++    <pre><code>import runloop
++
++async def main():
++    # your code here
++    await runloop.sleep_ms(500)
++
++runloop.run(main())</code></pre>
++
++    <h2>Example 1 — Single motor (“Hello, motors”)</h2>
++    <pre><code>from hub import port
++import runloop, motor
++
++async def main():
++    # One full rotation at 500 deg/s
++    await motor.run_for_degrees(port.A, 360, 500)
++    await runloop.sleep_ms(500)
++    # Park back to 0 degrees at 400 deg/s
++    await motor.run_to_absolute_position(port.A, 0, 400)
++    motor.stop(port.A)
++
++runloop.run(main())</code></pre>
++
++    <h2>Example 2 — Driving base (paired motors)</h2>
++    <pre><code>from hub import port
++import runloop, motor_pair
++
++# Pair once and reuse the pair ID
++motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
++
++async def main():
++    # Straight ~10 cm (≈ 206 deg for SPIKE wheels)
++    await motor_pair.move_for_degrees(motor_pair.PAIR_1, 206, 0, velocity=300)
++    await runloop.sleep_ms(300)
++    # Right turn using steering
++    await motor_pair.move_for_degrees(motor_pair.PAIR_1, 182, 100, velocity=300)
++    motor_pair.stop(motor_pair.PAIR_1)
++
++runloop.run(main())</code></pre>
++
++    <h2>Example 3 — Color sensor: stop on line, simple “bounce” follow</h2>
++    <pre><code>from hub import port, button
++import runloop, motor_pair, color_sensor, color
++
++motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
++
++async def main():
++    # Stop on black line when LEFT is held
++    if button.pressed(button.LEFT):
++        motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
++        await runloop.until(lambda: color_sensor.color(port.B) is color.BLACK)
++        motor_pair.stop(motor_pair.PAIR_1)
++
++    # Simple "bounce" line follow when RIGHT is held
++    if button.pressed(button.RIGHT):
++        while True:
++            motor_pair.move_tank(motor_pair.PAIR_1, 0, 300)
++            await runloop.until(lambda: color_sensor.color(port.B) is color.BLACK)
++            motor_pair.move_tank(motor_pair.PAIR_1, 300, 0)
++            await runloop.until(lambda: color_sensor.color(port.B) is color.WHITE)
++
++runloop.run(main())</code></pre>
++
++    <h2>Example 4 — Distance sensor: approach and stop</h2>
++    <pre><code>from hub import port
++import runloop, motor_pair, distance_sensor
++
++motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
++
++async def main():
++    motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
++    # Stop when within 100 mm of an object
++    await runloop.until(lambda: distance_sensor.distance(port.F) &lt; 100)
++    motor_pair.stop(motor_pair.PAIR_1)
++
++runloop.run(main())</code></pre>
++
++    <h2>Example 5 — Hub lights &amp; sounds</h2>
++    <pre><code>from hub import light_matrix, sound
++import runloop
++
++async def main():
++    light_matrix.show_image(light_matrix.IMAGE_HEART)
++    await sound.beep(523, 200)   # C5, 200 ms
++    await runloop.sleep_ms(500)
++    light_matrix.show_image(light_matrix.IMAGE_NO)
++
++runloop.run(main())</code></pre>
++
++    <h2>Notes</h2>
++    <ul>
++      <li><strong>Async first:</strong> use <code>await runloop.sleep_ms(...)</code> instead of blocking waits.</li>
++      <li><strong>Distances:</strong> <code>distance_sensor.distance()</code> returns <em>millimeters</em>.</li>
++      <li><strong>Colors:</strong> compare with <code>color.&lt;NAME&gt;</code> enums (e.g., <code>color.BLACK</code>).</li>
++      <li><strong>Motor pairs:</strong> pair once with <code>motor_pair.pair(...)</code> and reuse the pair id.</li>
++    </ul>
++  </body>
++</html>
+*** End Patch
