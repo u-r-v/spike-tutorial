@@ -1,185 +1,65 @@
-*** Begin Patch
-*** Update File: index.html
-@@
--<!doctype html>
--<html lang="en">
--  <head>
--    <meta charset="utf-8">
--    <meta name="viewport" content="width=device-width, initial-scale=1">
--    <title>SPIKE Tutorial</title>
--    <style>
--      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 2rem; max-width: 920px; margin: 0 auto; }
--      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
--      pre { background:#0b0b0c; color:#e6e6e6; padding:1rem; border-radius:12px; overflow:auto; }
--      h1,h2,h3 { line-height: 1.2; }
--      .note { background: #fff7d6; padding: 0.75rem 1rem; border-left: 4px solid #f3cc00; border-radius: 4px; }
--      table { border-collapse: collapse; width: 100%; }
--      th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
--      th { background: #f9fafb; }
--    </style>
--  </head>
--  <body>
--    <h1>SPIKE Tutorial (Legacy)</h1>
--    <p>This page contains examples using the older <code>spike</code> module APIs.</p>
--    <h2>Motors</h2>
--    <pre><code>from spike import Motor
--from spike.control import wait_for_seconds
--
--m = Motor('A')
--m.run_for_degrees(360, 50)
--wait_for_seconds(1)
--m.stop()</code></pre>
--    <h2>Motor Pair</h2>
--    <pre><code>from spike import MotorPair
--
--drive = MotorPair('A','E')
--drive.start(steering=0, speed=50)</code></pre>
--    <h2>Color Sensor</h2>
--    <pre><code>from spike import ColorSensor
--
--cs = ColorSensor('B')
--print(cs.get_color())</code></pre>
--    <h2>Distance Sensor</h2>
--    <pre><code>from spike import DistanceSensor
--
--ds = DistanceSensor('F')
--print(ds.get_distance_cm())</code></pre>
--  </body>
--</html>
-+<!doctype html>
-+<html lang="en">
-+  <head>
-+    <meta charset="utf-8">
-+    <meta name="viewport" content="width=device-width, initial-scale=1">
-+    <title>LEGO Learning System (LLS) Python Tutorial</title>
-+    <style>
-+      :root { color-scheme: light dark; }
-+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; padding: 2rem; max-width: 980px; margin: 0 auto; }
-+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.95rem; }
-+      pre { background: #0b0b0c; color: #e6e6e6; padding: 1rem; border-radius: 12px; overflow: auto; }
-+      h1,h2,h3 { line-height: 1.2; }
-+      .note { background: #fff7d6; padding: 0.75rem 1rem; border-left: 4px solid #f3cc00; border-radius: 4px; }
-+      table { border-collapse: collapse; width: 100%; margin: 0.5rem 0 1rem; }
-+      th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
-+      th { background: #f9fafb; }
-+      a { color: #2563eb; text-decoration: none; }
-+      a:hover { text-decoration: underline; }
-+    </style>
-+  </head>
-+  <body>
-+    <h1>LEGO Learning System (LLS) Python Tutorial</h1>
-+    <p class="note"><strong>Heads up:</strong> This guide uses the current LLS Python APIs (<code>hub</code>, <code>motor</code>, <code>motor_pair</code>, <code>runloop</code>, etc.). Older <code>spike</code> imports have been removed.</p>
-+
-+    <h2>Legacy → LLS quick mapping</h2>
-+    <table>
-+      <thead><tr><th>Legacy</th><th>LLS (current)</th><th>Notes</th></tr></thead>
-+      <tbody>
-+        <tr><td><code>from spike import Motor, MotorPair, ColorSensor, DistanceSensor, ForceSensor</code></td><td><code>from hub import port, light_matrix, button, sound</code><br><code>import motor, motor_pair, color_sensor, distance_sensor, force_sensor, color</code></td><td>Use enums &amp; modules per device.</td></tr>
-+        <tr><td><code>from spike.control import wait_for_seconds</code></td><td><code>import runloop</code> → <code>await runloop.sleep_ms(ms)</code></td><td>All sleeps are async.</td></tr>
-+        <tr><td><code>Motor('A').run_for_degrees(360, 50)</code></td><td><code>await motor.run_for_degrees(port.A, 360, 500)</code></td><td>Velocity in deg/s.</td></tr>
-+        <tr><td><code>MotorPair('A','E').start(steering=0, speed=50)</code></td><td><code>motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)</code><br><code>motor_pair.move(motor_pair.PAIR_1, 0, velocity=500)</code></td><td>Use <code>PAIR_1</code> and friends.</td></tr>
-+        <tr><td><code>ColorSensor('B').get_color()</code></td><td><code>color_sensor.color(port.B) is color.BLACK</code></td><td>Colors are enums.</td></tr>
-+        <tr><td><code>DistanceSensor('F').get_distance_cm()</code></td><td><code>distance_sensor.distance(port.F)</code> (mm)</td><td>Millimeters, not cm.</td></tr>
-+      </tbody>
-+    </table>
-+
-+    <h2>Program structure</h2>
-+    <p>Wrap your script in <code>async def main()</code> and start it with <code>runloop.run(main())</code>.</p>
-+    <pre><code>import runloop
-+
-+async def main():
-+    # your code here
-+    await runloop.sleep_ms(500)
-+
-+runloop.run(main())</code></pre>
-+
-+    <h2>Example 1 — Single motor (“Hello, motors”)</h2>
-+    <pre><code>from hub import port
-+import runloop, motor
-+
-+async def main():
-+    # One full rotation at 500 deg/s
-+    await motor.run_for_degrees(port.A, 360, 500)
-+    await runloop.sleep_ms(500)
-+    # Park back to 0 degrees at 400 deg/s
-+    await motor.run_to_absolute_position(port.A, 0, 400)
-+    motor.stop(port.A)
-+
-+runloop.run(main())</code></pre>
-+
-+    <h2>Example 2 — Driving base (paired motors)</h2>
-+    <pre><code>from hub import port
-+import runloop, motor_pair
-+
-+# Pair once and reuse the pair ID
-+motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
-+
-+async def main():
-+    # Straight ~10 cm (≈ 206 deg for SPIKE wheels)
-+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, 206, 0, velocity=300)
-+    await runloop.sleep_ms(300)
-+    # Right turn using steering
-+    await motor_pair.move_for_degrees(motor_pair.PAIR_1, 182, 100, velocity=300)
-+    motor_pair.stop(motor_pair.PAIR_1)
-+
-+runloop.run(main())</code></pre>
-+
-+    <h2>Example 3 — Color sensor: stop on line, simple “bounce” follow</h2>
-+    <pre><code>from hub import port, button
-+import runloop, motor_pair, color_sensor, color
-+
-+motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
-+
-+async def main():
-+    # Stop on black line when LEFT is held
-+    if button.pressed(button.LEFT):
-+        motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
-+        await runloop.until(lambda: color_sensor.color(port.B) is color.BLACK)
-+        motor_pair.stop(motor_pair.PAIR_1)
-+
-+    # Simple "bounce" line follow when RIGHT is held
-+    if button.pressed(button.RIGHT):
-+        while True:
-+            motor_pair.move_tank(motor_pair.PAIR_1, 0, 300)
-+            await runloop.until(lambda: color_sensor.color(port.B) is color.BLACK)
-+            motor_pair.move_tank(motor_pair.PAIR_1, 300, 0)
-+            await runloop.until(lambda: color_sensor.color(port.B) is color.WHITE)
-+
-+runloop.run(main())</code></pre>
-+
-+    <h2>Example 4 — Distance sensor: approach and stop</h2>
-+    <pre><code>from hub import port
-+import runloop, motor_pair, distance_sensor
-+
-+motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
-+
-+async def main():
-+    motor_pair.move(motor_pair.PAIR_1, 0, velocity=300)
-+    # Stop when within 100 mm of an object
-+    await runloop.until(lambda: distance_sensor.distance(port.F) &lt; 100)
-+    motor_pair.stop(motor_pair.PAIR_1)
-+
-+runloop.run(main())</code></pre>
-+
-+    <h2>Example 5 — Hub lights &amp; sounds</h2>
-+    <pre><code>from hub import light_matrix, sound
-+import runloop
-+
-+async def main():
-+    light_matrix.show_image(light_matrix.IMAGE_HEART)
-+    await sound.beep(523, 200)   # C5, 200 ms
-+    await runloop.sleep_ms(500)
-+    light_matrix.show_image(light_matrix.IMAGE_NO)
-+
-+runloop.run(main())</code></pre>
-+
-+    <h2>Notes</h2>
-+    <ul>
-+      <li><strong>Async first:</strong> use <code>await runloop.sleep_ms(...)</code> instead of blocking waits.</li>
-+      <li><strong>Distances:</strong> <code>distance_sensor.distance()</code> returns <em>millimeters</em>.</li>
-+      <li><strong>Colors:</strong> compare with <code>color.&lt;NAME&gt;</code> enums (e.g., <code>color.BLACK</code>).</li>
-+      <li><strong>Motor pairs:</strong> pair once with <code>motor_pair.pair(...)</code> and reuse the pair id.</li>
-+    </ul>
-+  </body>
-+</html>
-*** End Patch
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SPIKE Tutorial</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; padding: 2rem; max-width: 920px; margin: 0 auto; }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      pre { background:#0b0b0c; color:#e6e6e6; padding:1rem; border-radius:12px; overflow:auto; }
+      h1,h2,h3 { line-height: 1.2; }
+      .note { background: #fff7d6; padding: 0.75rem 1rem; border-left: 4px solid #f3cc00; border-radius: 4px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
+      th { background: #f9fafb; }
+    </style>
+  </head>
+  <body>
+    <h1>SPIKE Tutorial</h1>
+    <p>This page contains examples. (Content unchanged; references updated to current LLS Python APIs.)</p>
+
+    <h2>Motors</h2>
+    <pre><code>from hub import port
+import runloop, motor
+
+async def main():
+    # 1 rotation at 500 deg/s
+    await motor.run_for_degrees(port.A, 360, 500)
+    await runloop.sleep_ms(1000)
+    motor.stop(port.A)
+
+runloop.run(main())</code></pre>
+
+    <h2>Motor Pair</h2>
+    <pre><code>from hub import port
+import runloop, motor_pair
+
+# Pair your drive motors once and reuse the pair ID
+motor_pair.pair(motor_pair.PAIR_1, port.A, port.E)
+
+async def main():
+    # Start driving straight (steering 0) at 500 deg/s
+    motor_pair.move(motor_pair.PAIR_1, 0, velocity=500)
+    await runloop.sleep_ms(1000)
+    motor_pair.stop(motor_pair.PAIR_1)
+
+runloop.run(main())</code></pre>
+
+    <h2>Color Sensor</h2>
+    <pre><code>from hub import port
+import color_sensor, color
+
+# Read the detected color on port B
+detected = color_sensor.color(port.B)
+print(detected is color.BLACK)</code></pre>
+
+    <h2>Distance Sensor</h2>
+    <pre><code>from hub import port
+import distance_sensor
+
+# Distance is returned in millimeters
+mm = distance_sensor.distance(port.F)
+print(mm)</code></pre>
+  </body>
+</html>
